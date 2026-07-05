@@ -116,12 +116,10 @@ def create_department():
 @app.route("/api/departments/<int:dep_id>", methods=["PUT"])
 def update_department(dep_id):
     payload = request.get_json(force=True)
+    allowed = ["name", "description", "location"]
+    row = {k: payload[k] for k in allowed if k in payload}
     try:
-        res = db().table("departments").update({
-            "name": payload.get("name"),
-            "description": payload.get("description"),
-            "location": payload.get("location"),
-        }).eq("id", dep_id).execute()
+        res = db().table("departments").update(row).eq("id", dep_id).execute()
         return ok(res.data, "Department updated")
     except Exception as e:
         return err(e, 400)
@@ -140,7 +138,8 @@ def delete_department(dep_id):
 @app.route("/api/positions", methods=["GET"])
 def get_positions():
     try:
-        query = db().table("positions").select("*, department:departments(id,name)").order("title")
+        # Fetch position info AND employees assigned to it
+        query = db().table("positions").select("*, department:departments(id,name), employees:employees(id,first_name,last_name,employee_code)").order("title")
         search = request.args.get("search")
         if search:
             query = query.ilike("title", f"%{search}%")
@@ -174,13 +173,10 @@ def create_position():
 @app.route("/api/positions/<int:pos_id>", methods=["PUT"])
 def update_position(pos_id):
     payload = request.get_json(force=True)
+    allowed = ["title", "department_id", "min_salary", "max_salary"]
+    row = {k: payload[k] for k in allowed if k in payload}
     try:
-        res = db().table("positions").update({
-            "title": payload.get("title"),
-            "department_id": payload.get("department_id") or None,
-            "min_salary": payload.get("min_salary") or 0,
-            "max_salary": payload.get("max_salary") or 0,
-        }).eq("id", pos_id).execute()
+        res = db().table("positions").update(row).eq("id", pos_id).execute()
         return ok(res.data, "Position updated")
     except Exception as e:
         return err(e, 400)
@@ -248,23 +244,10 @@ def create_employee():
 @app.route("/api/employees/<int:emp_id>", methods=["PUT"])
 def update_employee(emp_id):
     payload = request.get_json(force=True)
+    # Partial update to allow assigning position_id without wiping other fields
+    allowed = ["employee_code", "first_name", "last_name", "email", "phone", "gender", "date_of_birth", "address", "department_id", "position_id", "manager_id", "hire_date", "salary", "status"]
+    row = {k: payload[k] for k in allowed if k in payload}
     try:
-        row = {
-            "employee_code": payload.get("employee_code"),
-            "first_name": payload.get("first_name"),
-            "last_name": payload.get("last_name"),
-            "email": payload.get("email"),
-            "phone": payload.get("phone"),
-            "gender": payload.get("gender") or None,
-            "date_of_birth": payload.get("date_of_birth") or None,
-            "address": payload.get("address"),
-            "department_id": payload.get("department_id") or None,
-            "position_id": payload.get("position_id") or None,
-            "manager_id": payload.get("manager_id") or None,
-            "hire_date": payload.get("hire_date"),
-            "salary": payload.get("salary") or 0,
-            "status": payload.get("status") or "active"
-        }
         res = db().table("employees").update(row).eq("id", emp_id).execute()
         return ok(res.data, "Employee updated")
     except Exception as e:
@@ -318,15 +301,9 @@ def create_attendance():
 @app.route("/api/attendance/<int:att_id>", methods=["PUT"])
 def update_attendance(att_id):
     payload = request.get_json(force=True)
+    allowed = ["employee_id", "date", "check_in", "check_out", "status", "notes"]
+    row = {k: payload[k] for k in allowed if k in payload}
     try:
-        row = {
-            "employee_id": payload.get("employee_id"),
-            "date": payload.get("date"),
-            "check_in": payload.get("check_in") or None,
-            "check_out": payload.get("check_out") or None,
-            "status": payload.get("status") or "present",
-            "notes": payload.get("notes"),
-        }
         res = db().table("attendance").update(row).eq("id", att_id).execute()
         return ok(res.data, "Attendance updated")
     except Exception as e:
@@ -380,16 +357,9 @@ def create_leave():
 @app.route("/api/leaves/<int:leave_id>", methods=["PUT"])
 def update_leave(leave_id):
     payload = request.get_json(force=True)
+    allowed = ["employee_id", "leave_type", "start_date", "end_date", "reason", "status", "approved_by"]
+    row = {k: payload[k] for k in allowed if k in payload}
     try:
-        row = {
-            "employee_id": payload.get("employee_id"),
-            "leave_type": payload.get("leave_type"),
-            "start_date": payload.get("start_date"),
-            "end_date": payload.get("end_date"),
-            "reason": payload.get("reason"),
-            "status": payload.get("status") or "pending",
-            "approved_by": payload.get("approved_by") or None,
-        }
         res = db().table("leaves").update(row).eq("id", leave_id).execute()
         return ok(res.data, "Leave request updated")
     except Exception as e:
@@ -449,21 +419,14 @@ def create_payroll():
 @app.route("/api/payroll/<int:pay_id>", methods=["PUT"])
 def update_payroll(pay_id):
     payload = request.get_json(force=True)
-    basic = payload.get("basic_salary") or 0
-    allowances = payload.get("allowances") or 0
-    deductions = payload.get("deductions") or 0
+    allowed = ["employee_id", "month", "year", "basic_salary", "allowances", "deductions", "payment_date", "status"]
+    row = {k: payload[k] for k in allowed if k in payload}
+    if "basic_salary" in row or "allowances" in row or "deductions" in row:
+        basic = row.get("basic_salary", 0)
+        allowances = row.get("allowances", 0)
+        deductions = row.get("deductions", 0)
+        row["net_salary"] = (basic + allowances) - deductions
     try:
-        row = {
-            "employee_id": payload.get("employee_id"),
-            "month": payload.get("month"),
-            "year": payload.get("year"),
-            "basic_salary": basic,
-            "allowances": allowances,
-            "deductions": deductions,
-            "net_salary": (basic + allowances) - deductions,
-            "payment_date": payload.get("payment_date") or None,
-            "status": payload.get("status") or "pending",
-        }
         res = db().table("payroll").update(row).eq("id", pay_id).execute()
         return ok(res.data, "Payroll entry updated")
     except Exception as e:
@@ -484,8 +447,9 @@ def delete_payroll(pay_id):
 def dashboard_stats():
     try:
         client = db()
-        employees = client.table("employees").select("id,status,department_id,salary,hire_date").execute().data
+        employees = client.table("employees").select("id,status,department_id,position_id,salary,hire_date").execute().data
         departments = client.table("departments").select("id,name").execute().data
+        positions = client.table("positions").select("id,title").execute().data
         leaves = client.table("leaves").select("id,status").execute().data
         attendance_today = client.table("attendance").select("id,status").eq("date", str(date.today())).execute().data
 
@@ -494,16 +458,22 @@ def dashboard_stats():
         total_monthly_salary = sum(float(e["salary"] or 0) for e in employees if e["status"] == "active")
 
         dep_name_by_id = {d["id"]: d["name"] for d in departments}
+        pos_name_by_id = {p["id"]: p["title"] for p in positions}
+        
         dep_counts = defaultdict(int)
         status_counts = defaultdict(int)
+        pos_counts = defaultdict(int)
         
         for e in employees:
             status_counts[e["status"]] += 1
             if e["status"] not in ("terminated",):
                 dep_counts[dep_name_by_id.get(e["department_id"], "Unassigned")] += 1
+            if e.get("position_id"):
+                pos_counts[pos_name_by_id.get(e["position_id"], "Unknown")] += 1
 
         department_distribution = [{"label": k, "value": v} for k, v in sorted(dep_counts.items(), key=lambda x: -x[1])]
         status_distribution = [{"label": k, "value": v} for k, v in status_counts.items()]
+        position_distribution = [{"label": k, "value": v} for k, v in sorted(pos_counts.items(), key=lambda x: -x[1])]
 
         month_buckets = OrderedDict()
         now = datetime.today()
@@ -543,6 +513,7 @@ def dashboard_stats():
             },
             "department_distribution": department_distribution,
             "status_distribution": status_distribution,
+            "position_distribution": position_distribution,
             "hiring_trend": hiring_trend,
             "attendance_trend": attendance_trend,
         })
