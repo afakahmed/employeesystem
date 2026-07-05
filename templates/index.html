@@ -77,7 +77,8 @@
         .input, .select { padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-family: var(--font-body); font-size: 13.5px; background: var(--surface-alt); min-width: 150px; }
         .input:focus, .select:focus { outline: none; border-color: var(--primary); background: #fff; }
 
-        .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-bottom: 22px; }
+        /* Dashboard Cards */
+        .stat-grid-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 18px; margin-bottom: 22px; }
         .stat-card { border: none; color: #fff; position: relative; overflow: hidden; transition: 0.2s; box-shadow: var(--shadow-md); padding: 24px; border-radius: var(--radius-lg); }
         .stat-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
         .stat-card::after { content: ''; position: absolute; top: -20px; right: -20px; width: 120px; height: 120px; background: rgba(255,255,255,0.1); border-radius: 50%; }
@@ -87,20 +88,24 @@
         .stat-card.c-blue { background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%); }
         .stat-card.c-green { background: linear-gradient(135deg, #10B981 0%, #059669 100%); }
         .stat-card.c-orange { background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%); }
+        .stat-card.c-pink { background: linear-gradient(135deg, #F43F5E 0%, #E11D48 100%); }
+        .stat-card.c-cyan { background: linear-gradient(135deg, #06B6D4 0%, #0891B2 100%); }
 
         .icon-badge { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 14px; }
         .stat-value { font-size: 28px; font-weight: 800; font-family: var(--font-display); letter-spacing: -1px; }
         .stat-label { font-size: 13px; font-weight: 500; opacity: 0.9; }
         
-        .chart-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 18px; margin-bottom: 18px; }
+        /* Chart Grids */
+        .chart-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-bottom: 18px; }
+        .chart-grid-2 { display: grid; grid-template-columns: 1.4fr 1fr; gap: 18px; margin-bottom: 18px; }
         .panel { background: var(--surface); border-radius: var(--radius-lg); padding: 22px; border: 1px solid var(--border); box-shadow: var(--shadow-sm); }
-        .chart-wrap { height: 260px; position: relative; margin-top: 10px; }
+        .chart-wrap { height: 240px; position: relative; margin-top: 10px; }
         
         /* Tables */
         .data-card { background: var(--surface); border-radius: var(--radius-lg); border: 1px solid var(--border); overflow: hidden; box-shadow: var(--shadow-sm); }
         .data-table { width: 100%; border-collapse: collapse; }
         .data-table th { background: var(--surface-alt); text-align: left; padding: 14px 20px; font-size: 11px; text-transform: uppercase; color: var(--text-faint); font-weight: 700; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
-        .data-table td { padding: 14px 20px; border-bottom: 1px solid var(--border); font-size: 13.5px; }
+        .data-table td { padding: 14px 20px; border-bottom: 1px solid var(--border); font-size: 13.5px; vertical-align: middle; }
         .data-table tr:last-child td { border-bottom: none; }
         .data-table tr:hover { background: var(--surface-alt); }
         
@@ -209,8 +214,9 @@
         <main class="content">
             <!-- Dashboard -->
             <section id="page-dashboard" class="page active">
-                <div class="stat-grid" id="statGrid"></div>
-                <div class="chart-grid">
+                <div class="stat-grid-5" id="statGrid"></div>
+                
+                <div class="chart-grid-3">
                     <div class="panel">
                         <h3>Hiring Trend</h3>
                         <div class="chart-wrap"><canvas id="hiringChart"></canvas></div>
@@ -218,10 +224,14 @@
                     <div class="panel">
                         <h3>Department Mix</h3>
                         <div class="chart-wrap"><canvas id="deptPieChart"></canvas></div>
-                        <div id="deptLegend" style="margin-top: 15px; display: flex; flex-wrap: wrap; gap: 10px;"></div>
+                    </div>
+                    <div class="panel">
+                        <h3>Employees by Position</h3>
+                        <div class="chart-wrap"><canvas id="posPieChart"></canvas></div>
                     </div>
                 </div>
-                <div class="chart-grid">
+                
+                <div class="chart-grid-2">
                     <div class="panel">
                         <h3>Attendance Trend</h3>
                         <div class="chart-wrap"><canvas id="attendanceChart"></canvas></div>
@@ -276,7 +286,7 @@
                 </div>
                 <div class="data-card">
                     <table class="data-table">
-                        <thead><tr><th>Title</th><th>Department</th><th>Min Salary</th><th>Max Salary</th><th>Actions</th></tr></thead>
+                        <thead><tr><th>Title</th><th>Department</th><th>Salary Range</th><th>Assigned Employees</th><th>Actions</th></tr></thead>
                         <tbody id="posTableBody"></tbody>
                     </table>
                 </div>
@@ -415,6 +425,24 @@
             <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
                 <button type="button" class="btn btn-secondary" onclick="closeModal('posModal')">Cancel</button>
                 <button type="submit" class="btn btn-primary">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Assign Position Modal -->
+<div class="modal-overlay" id="assignPosModal">
+    <div class="modal">
+        <h3>Assign Employee to Position</h3>
+        <form id="assignPosForm" style="margin-top: 20px;">
+            <input type="hidden" id="assignPosId">
+            <div class="form-group">
+                <label>Select Employee</label>
+                <select id="assignEmpToPos" required></select>
+            </div>
+            <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('assignPosModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Assign</button>
             </div>
         </form>
     </div>
@@ -617,12 +645,17 @@ function renderDeptPie(dist) {
         data: { labels: dist.map(d => d.label), datasets: [{ data: dist.map(d => d.value), backgroundColor: COLORS }] },
         options: { responsive: true, maintainAspectRatio: false, cutout: '70%' }
     });
-    document.getElementById("deptLegend").innerHTML = dist.map((d, i) => `
-        <div style="font-size:11px; display:flex; align-items:center; gap:5px;">
-            <div style="width:8px; height:8px; border-radius:50%; background:${COLORS[i % COLORS.length]}"></div>
-            ${d.label}: ${d.value}
-        </div>
-    `).join("");
+}
+
+function renderPosPie(dist) {
+    if (typeof Chart === 'undefined') return;
+    const ctx = document.getElementById("posPieChart").getContext('2d');
+    if (charts.pos) charts.pos.destroy();
+    charts.pos = new Chart(ctx, {
+        type: 'doughnut',
+        data: { labels: dist.map(d => d.label), datasets: [{ data: dist.map(d => d.value), backgroundColor: COLORS }] },
+        options: { responsive: true, maintainAspectRatio: false, cutout: '70%' }
+    });
 }
 
 function renderStatusPie(dist) {
@@ -656,11 +689,13 @@ async function loadDashboard() {
     try {
         const data = await Api.get("/api/dashboard/stats");
         const grid = document.getElementById("statGrid");
-        // Limited to 3 Colorful Cards
+        // Restored 5 Colorful Cards
         const cards = [
             { l: "Total Employees", v: data.cards.total_employees, i: "users", c: "c-blue" },
             { l: "Present Today", v: data.cards.present_today, i: "calendar-check", c: "c-green" },
-            { l: "Monthly Payroll", v: formatCurrency(data.cards.total_monthly_salary), i: "wallet", c: "c-orange" }
+            { l: "Monthly Payroll", v: formatCurrency(data.cards.total_monthly_salary), i: "wallet", c: "c-orange" },
+            { l: "Departments", v: data.cards.total_departments, i: "building-2", c: "c-pink" },
+            { l: "Pending Leaves", v: data.cards.pending_leaves, i: "plane-takeoff", c: "c-cyan" }
         ];
         grid.innerHTML = cards.map(c => `
             <div class="stat-card ${c.c}">
@@ -673,6 +708,7 @@ async function loadDashboard() {
         lucide.createIcons();
         renderHiringChart(data.hiring_trend || []);
         renderDeptPie(data.department_distribution || []);
+        renderPosPie(data.position_distribution || []);
         renderStatusPie(data.status_distribution || []);
         renderAttendanceChart(data.attendance_trend || []);
     } catch (e) {
@@ -688,6 +724,21 @@ async function populateDeptDropdown() {
     document.getElementById("empDept").innerHTML = `<option value="">None</option>${opts}`;
     document.getElementById("empFilterDept").innerHTML = `<option value="">All Departments</option>${opts}`;
     document.getElementById("posDept").innerHTML = `<option value="">None</option>${opts}`;
+}
+
+async function populateEmpDropdown() {
+    const emps = await Api.get("/api/employees");
+    const opts = emps.map(e => `<option value="${e.id}">${e.first_name} ${e.last_name} (${e.employee_code})</option>`).join("");
+    
+    document.getElementById("attEmp").innerHTML = opts;
+    document.getElementById("payrollEmp").innerHTML = opts;
+    document.getElementById("leaveEmp").innerHTML = opts;
+    document.getElementById("assignEmpToPos").innerHTML = opts; // For Assign Position Modal
+    
+    const filterOpts = `<option value="">All Employees</option>${opts}`;
+    document.getElementById("attFilterEmp").innerHTML = filterOpts;
+    document.getElementById("payFilterEmp").innerHTML = filterOpts;
+    document.getElementById("leaveFilterEmp").innerHTML = filterOpts;
 }
 
 async function loadEmployees() {
@@ -743,7 +794,7 @@ async function openEmpModal(id = null) {
 
 async function deleteEmployee(id) {
     if (!confirm("Delete employee?")) return;
-    try { await Api.del(`/api/employees/${id}`); showToast("Employee removed"); loadEmployees(); } 
+    try { await Api.del(`/api/employees/${id}`); showToast("Employee removed"); loadEmployees(); populateEmpDropdown(); } 
     catch (e) { showToast(e.message, "error"); }
 }
 
@@ -803,18 +854,25 @@ async function loadPositions() {
 
     try {
         const data = await Api.get(url);
-        body.innerHTML = data.length ? data.map(p => `
-            <tr>
-                <td><strong>${p.title}</strong></td>
-                <td>${p.department ? p.department.name : '—'}</td>
-                <td>${formatCurrency(p.min_salary)}</td>
-                <td>${formatCurrency(p.max_salary)}</td>
-                <td style="display:flex; gap:6px;">
-                    <button onclick="openPosModal(${p.id})" class="btn-icon"><i data-lucide="edit"></i></button>
-                    <button onclick="deletePosition(${p.id})" class="btn-icon" style="color:#F43F5E;"><i data-lucide="trash-2"></i></button>
-                </td>
-            </tr>
-        `).join("") : `<tr><td colspan="5" style="text-align:center;">No positions found.</td></tr>`;
+        body.innerHTML = data.length ? data.map(p => {
+            // Format Assigned Employees
+            const empList = p.employees && p.employees.length > 0 
+                ? p.employees.map(e => `<span style="background:#F1F2F6; padding:3px 8px; border-radius:4px; font-size:11px; margin-right:4px;">${e.first_name} ${e.last_name}</span>`).join('') 
+                : '—';
+            return `
+                <tr>
+                    <td><strong>${p.title}</strong></td>
+                    <td>${p.department ? p.department.name : '—'}</td>
+                    <td>${formatCurrency(p.min_salary)} - ${formatCurrency(p.max_salary)}</td>
+                    <td style="max-width: 300px;">${empList}</td>
+                    <td style="display:flex; gap:6px;">
+                        <button onclick="openPosModal(${p.id})" class="btn-icon"><i data-lucide="edit"></i></button>
+                        <button onclick="openAssignPosModal(${p.id})" class="btn-icon" style="color:#6D28D9;"><i data-lucide="user-plus"></i></button>
+                        <button onclick="deletePosition(${p.id})" class="btn-icon" style="color:#F43F5E;"><i data-lucide="trash-2"></i></button>
+                    </td>
+                </tr>
+            `;
+        }).join("") : `<tr><td colspan="5" style="text-align:center;">No positions found.</td></tr>`;
         lucide.createIcons();
     } catch (e) { showToast(e.message, "error"); }
 }
@@ -835,6 +893,12 @@ async function openPosModal(id = null) {
     openModal('posModal');
 }
 
+async function openAssignPosModal(posId) {
+    document.getElementById("assignPosId").value = posId;
+    document.getElementById("assignPosForm").reset();
+    openModal('assignPosModal');
+}
+
 async function deletePosition(id) {
     if (!confirm("Delete position?")) return;
     try { await Api.del(`/api/positions/${id}`); showToast("Position removed"); loadPositions(); } 
@@ -842,20 +906,6 @@ async function deletePosition(id) {
 }
 
 /* Attendance & Leaves */
-async function populateEmpDropdown() {
-    const emps = await Api.get("/api/employees");
-    const opts = emps.map(e => `<option value="${e.id}">${e.first_name} ${e.last_name} (${e.employee_code})</option>`).join("");
-    
-    document.getElementById("attEmp").innerHTML = opts;
-    document.getElementById("payrollEmp").innerHTML = opts;
-    document.getElementById("leaveEmp").innerHTML = opts;
-    
-    const filterOpts = `<option value="">All Employees</option>${opts}`;
-    document.getElementById("attFilterEmp").innerHTML = filterOpts;
-    document.getElementById("payFilterEmp").innerHTML = filterOpts;
-    document.getElementById("leaveFilterEmp").innerHTML = filterOpts;
-}
-
 async function loadAttendance() {
     const body = document.getElementById("attTableBody");
     body.innerHTML = "<tr><td colspan='4'>Loading...</td></tr>";
@@ -1095,6 +1145,7 @@ document.addEventListener("DOMContentLoaded", () => {
             showToast(id ? "Employee updated!" : "Employee added!");
             closeModal('employeeModal');
             loadEmployees();
+            populateEmpDropdown();
         } catch (err) { showToast(err.message, "error"); }
     };
 
@@ -1130,6 +1181,20 @@ document.addEventListener("DOMContentLoaded", () => {
             else await Api.post("/api/positions", payload);
             showToast(id ? "Position updated!" : "Position added!");
             closeModal('posModal');
+            loadPositions();
+        } catch (err) { showToast(err.message, "error"); }
+    };
+
+    // Assign Position Form
+    document.getElementById("assignPosForm").onsubmit = async (e) => {
+        e.preventDefault();
+        const posId = document.getElementById("assignPosId").value;
+        const empId = document.getElementById("assignEmpToPos").value;
+        try {
+            // Partial update to employee to set their position_id
+            await Api.put(`/api/employees/${empId}`, { position_id: parseInt(posId) });
+            showToast("Employee assigned to position!");
+            closeModal('assignPosModal');
             loadPositions();
         } catch (err) { showToast(err.message, "error"); }
     };
