@@ -138,7 +138,6 @@ def delete_department(dep_id):
 @app.route("/api/positions", methods=["GET"])
 def get_positions():
     try:
-        # Fetch position info AND employees assigned to it
         query = db().table("positions").select("*, department:departments(id,name), employees:employees(id,first_name,last_name,employee_code)").order("title")
         search = request.args.get("search")
         if search:
@@ -244,7 +243,6 @@ def create_employee():
 @app.route("/api/employees/<int:emp_id>", methods=["PUT"])
 def update_employee(emp_id):
     payload = request.get_json(force=True)
-    # Partial update to allow assigning position_id without wiping other fields
     allowed = ["employee_code", "first_name", "last_name", "email", "phone", "gender", "date_of_birth", "address", "department_id", "position_id", "manager_id", "hire_date", "salary", "status"]
     row = {k: payload[k] for k in allowed if k in payload}
     try:
@@ -447,7 +445,7 @@ def delete_payroll(pay_id):
 def dashboard_stats():
     try:
         client = db()
-        employees = client.table("employees").select("id,status,department_id,position_id,salary,hire_date").execute().data
+        employees = client.table("employees").select("id,status,department_id,position_id,salary,hire_date,first_name,last_name,position:positions(id,title)").execute().data
         departments = client.table("departments").select("id,name").execute().data
         positions = client.table("positions").select("id,title").execute().data
         leaves = client.table("leaves").select("id,status").execute().data
@@ -463,6 +461,7 @@ def dashboard_stats():
         dep_counts = defaultdict(int)
         status_counts = defaultdict(int)
         pos_counts = defaultdict(int)
+        employees_by_position = []
         
         for e in employees:
             status_counts[e["status"]] += 1
@@ -470,6 +469,12 @@ def dashboard_stats():
                 dep_counts[dep_name_by_id.get(e["department_id"], "Unassigned")] += 1
             if e.get("position_id"):
                 pos_counts[pos_name_by_id.get(e["position_id"], "Unknown")] += 1
+            
+            pos_title = e.get("position", {}).get("title") if e.get("position") else "Unassigned"
+            employees_by_position.append({
+                "name": f"{e['first_name']} {e['last_name']}",
+                "position": pos_title
+            })
 
         department_distribution = [{"label": k, "value": v} for k, v in sorted(dep_counts.items(), key=lambda x: -x[1])]
         status_distribution = [{"label": k, "value": v} for k, v in status_counts.items()]
@@ -514,6 +519,7 @@ def dashboard_stats():
             "department_distribution": department_distribution,
             "status_distribution": status_distribution,
             "position_distribution": position_distribution,
+            "employees_by_position": employees_by_position, # For the detailed list
             "hiring_trend": hiring_trend,
             "attendance_trend": attendance_trend,
         })
