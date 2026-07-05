@@ -37,7 +37,6 @@ def ok(data=None, message="success", status=200):
     return jsonify({"success": True, "message": message, "data": data}), status
 
 def err(message, status=400):
-    # Ensure message is string so jsonify doesn't fail serializing Exception objects
     return jsonify({"success": False, "message": str(message), "data": None}), status
 
 def full_name_select():
@@ -51,7 +50,7 @@ def full_name_select():
 # SPA Routing
 # ---------------------------------------------------------------------------
 SPA_ROUTES = [
-    "/", "/dashboard", "/employees", "/departments", 
+    "/", "/login", "/dashboard", "/employees", "/departments", 
     "/positions", "/attendance", "/leaves", "/payroll"
 ]
 
@@ -65,6 +64,19 @@ for _route in SPA_ROUTES:
 def healthz():
     return ok({"status": "ok", "supabase_configured": supabase is not None})
 
+# ---------------------------------------------------------------------------
+# Auth (Mock)
+# ---------------------------------------------------------------------------
+@app.route("/api/login", methods=["POST"])
+def login():
+    payload = request.get_json(force=True)
+    email = payload.get("email")
+    password = payload.get("password")
+    
+    # Mock authentication
+    if email == "admin@orbit.hr" and password == "password123":
+        return ok({"token": "mock-jwt-token-xyz", "user": {"name": "HR Admin", "role": "Administrator"}}, "Login successful")
+    return err("Invalid email or password", 401)
 
 # ===========================================================================
 # API: DEPARTMENTS
@@ -72,7 +84,11 @@ def healthz():
 @app.route("/api/departments", methods=["GET"])
 def get_departments():
     try:
-        res = db().table("departments").select("*").order("name").execute()
+        query = db().table("departments").select("*")
+        search = request.args.get("search")
+        if search:
+            query = query.or_(f"name.ilike.%{search}%,location.ilike.%{search}%")
+        res = query.order("name").execute()
         return ok(res.data)
     except Exception as e:
         return err(e, 500)
@@ -116,61 +132,6 @@ def delete_department(dep_id):
     try:
         db().table("departments").delete().eq("id", dep_id).execute()
         return ok(None, "Department deleted")
-    except Exception as e:
-        return err(e, 400)
-
-# ===========================================================================
-# API: POSITIONS
-# ===========================================================================
-@app.route("/api/positions", methods=["GET"])
-def get_positions():
-    try:
-        res = db().table("positions").select("*, department:departments(id,name)").order("title").execute()
-        return ok(res.data)
-    except Exception as e:
-        return err(e, 500)
-
-@app.route("/api/positions/<int:pos_id>", methods=["GET"])
-def get_position(pos_id):
-    try:
-        res = db().table("positions").select("*, department:departments(id,name)").eq("id", pos_id).single().execute()
-        return ok(res.data)
-    except Exception as e:
-        return err(e, 404)
-
-@app.route("/api/positions", methods=["POST"])
-def create_position():
-    payload = request.get_json(force=True)
-    try:
-        res = db().table("positions").insert({
-            "title": payload.get("title"),
-            "department_id": payload.get("department_id") or None,
-            "min_salary": payload.get("min_salary") or 0,
-            "max_salary": payload.get("max_salary") or 0,
-        }).execute()
-        return ok(res.data, "Position created", 201)
-    except Exception as e:
-        return err(e, 400)
-
-@app.route("/api/positions/<int:pos_id>", methods=["PUT"])
-def update_position(pos_id):
-    payload = request.get_json(force=True)
-    try:
-        res = db().table("positions").update({
-            "title": payload.get("title"),
-            "department_id": payload.get("department_id") or None,
-            "min_salary": payload.get("min_salary") or 0,
-            "max_salary": payload.get("max_salary") or 0,
-        }).eq("id", pos_id).execute()
-        return ok(res.data, "Position updated")
-    except Exception as e:
-        return err(e, 400)
-
-@app.route("/api/positions/<int:pos_id>", methods=["DELETE"])
-def delete_position(pos_id):
-    try:
-        db().table("positions").delete().eq("id", pos_id).execute()
-        return ok(None, "Position deleted")
     except Exception as e:
         return err(e, 400)
 
@@ -269,9 +230,11 @@ def get_attendance():
         emp_id = request.args.get("employee_id")
         d_from = request.args.get("from")
         d_to = request.args.get("to")
+        status = request.args.get("status")
         if emp_id: query = query.eq("employee_id", emp_id)
         if d_from: query = query.gte("date", d_from)
         if d_to: query = query.lte("date", d_to)
+        if status: query = query.eq("status", status)
         res = query.order("date", desc=True).execute()
         return ok(res.data)
     except Exception as e:
@@ -320,69 +283,6 @@ def delete_attendance(att_id):
         return err(e, 400)
 
 # ===========================================================================
-# API: LEAVES
-# ===========================================================================
-@app.route("/api/leaves", methods=["GET"])
-def get_leaves():
-    try:
-        query = db().table("leaves").select(
-            "*, employee:employees!employee_id(id,first_name,last_name,employee_code), "
-            "approver:employees!approved_by(id,first_name,last_name)"
-        )
-        status = request.args.get("status")
-        emp_id = request.args.get("employee_id")
-        if status: query = query.eq("status", status)
-        if emp_id: query = query.eq("employee_id", emp_id)
-        res = query.order("id", desc=True).execute()
-        return ok(res.data)
-    except Exception as e:
-        return err(e, 500)
-
-@app.route("/api/leaves", methods=["POST"])
-def create_leave():
-    payload = request.get_json(force=True)
-    try:
-        row = {
-            "employee_id": payload.get("employee_id"),
-            "leave_type": payload.get("leave_type"),
-            "start_date": payload.get("start_date"),
-            "end_date": payload.get("end_date"),
-            "reason": payload.get("reason"),
-            "status": payload.get("status") or "pending",
-            "approved_by": payload.get("approved_by") or None,
-        }
-        res = db().table("leaves").insert(row).execute()
-        return ok(res.data, "Leave request created", 201)
-    except Exception as e:
-        return err(e, 400)
-
-@app.route("/api/leaves/<int:leave_id>", methods=["PUT"])
-def update_leave(leave_id):
-    payload = request.get_json(force=True)
-    try:
-        row = {
-            "employee_id": payload.get("employee_id"),
-            "leave_type": payload.get("leave_type"),
-            "start_date": payload.get("start_date"),
-            "end_date": payload.get("end_date"),
-            "reason": payload.get("reason"),
-            "status": payload.get("status") or "pending",
-            "approved_by": payload.get("approved_by") or None,
-        }
-        res = db().table("leaves").update(row).eq("id", leave_id).execute()
-        return ok(res.data, "Leave request updated")
-    except Exception as e:
-        return err(e, 400)
-
-@app.route("/api/leaves/<int:leave_id>", methods=["DELETE"])
-def delete_leave(leave_id):
-    try:
-        db().table("leaves").delete().eq("id", leave_id).execute()
-        return ok(None, "Leave request deleted")
-    except Exception as e:
-        return err(e, 400)
-
-# ===========================================================================
 # API: PAYROLL
 # ===========================================================================
 @app.route("/api/payroll", methods=["GET"])
@@ -392,9 +292,11 @@ def get_payroll():
         emp_id = request.args.get("employee_id")
         month = request.args.get("month")
         year = request.args.get("year")
+        status = request.args.get("status")
         if emp_id: query = query.eq("employee_id", emp_id)
         if month: query = query.eq("month", month)
         if year: query = query.eq("year", year)
+        if status: query = query.eq("status", status)
         res = query.order("year", desc=True).order("month", desc=True).execute()
         return ok(res.data)
     except Exception as e:
