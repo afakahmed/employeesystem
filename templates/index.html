@@ -10,26 +10,23 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     
     <style>
-        /* ==========================================================================
-           ORBIT HR — DESIGN TOKENS
-           ========================================================================== */
         @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap');
 
         :root {
-            --bg: #F5F6FB;
+            --bg: #F5F7FE;
             --surface: #FFFFFF;
             --surface-alt: #F9FAFE;
             --border: #E6E8F2;
             --text: #171A2B;
             --text-dim: #6B7080;
             --text-faint: #A0A4B8;
-            --sidebar-bg: #12142A;
-            --sidebar-bg-2: #191C39;
+            --sidebar-bg: #0F112A;
+            --sidebar-bg-2: #1A1D3E;
             --sidebar-text: #C7C9E0;
             --sidebar-text-active: #FFFFFF;
-            --primary: #5B5FEF;
-            --primary-dark: #4548C9;
+            --primary: #6D28D9; /* Violet 700 */
             --primary-light: #EDEDFC;
+            --primary-gradient: linear-gradient(135deg, #7C3AED 0%, #4F46E5 100%);
             --success: #10B981;
             --warning: #F59E0B;
             --danger: #F43F5E;
@@ -38,89 +35,146 @@
             --radius-lg: 20px;
             --shadow-sm: 0 1px 2px rgba(23, 26, 43, 0.04);
             --shadow-md: 0 4px 16px rgba(23, 26, 43, 0.06);
+            --shadow-lg: 0 10px 30px rgba(23, 26, 43, 0.08);
             --font-display: 'Sora', sans-serif;
             --font-body: 'Inter', sans-serif;
             --font-mono: 'JetBrains Mono', monospace;
-
-            /* Category Colors */
-            --c-employees-bg:#EAF1FF; --c-employees: #3E7BFA;
-            --c-departments-bg:#F1ECFE; --c-departments: #8B5CF6;
-            --c-positions-bg:#FFF4E0; --c-positions: #F59E0B;
-            --c-attendance-bg:#E4F9F0; --c-attendance: #10B981;
-            --c-leaves-bg: #FEE9EC; --c-leaves: #F43F5E;
-            --c-payroll-bg: #E1F8FC; --c-payroll: #06B6D4;
         }
 
         * { box-sizing: border-box; }
         body { font-family: var(--font-body); background: var(--bg); color: var(--text); margin: 0; -webkit-font-smoothing: antialiased; }
         h1, h2, h3 { font-family: var(--font-display); margin: 0; }
+        code { font-family: var(--font-mono); background: #F1F2F6; padding: 2px 6px; border-radius: 4px; font-size: 12px; }
         
         /* Layout */
         .app-shell { display: flex; min-height: 100vh; }
-        .sidebar { width: 260px; background: linear-gradient(190deg, var(--sidebar-bg) 0%, var(--sidebar-bg-2) 100%); color: var(--sidebar-text); padding: 24px 16px; position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column; }
+        .sidebar { width: 260px; background: linear-gradient(190deg, var(--sidebar-bg) 0%, var(--sidebar-bg-2) 100%); color: var(--sidebar-text); padding: 24px 16px; position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column; border-right: 1px solid rgba(255,255,255,0.05); box-shadow: 4px 0 24px rgba(0,0,0,0.1); }
         .brand { display: flex; align-items: center; gap: 12px; padding: 4px 8px 28px; }
-        .brand-mark { width: 40px; height: 40px; border-radius: 12px; background: linear-gradient(135deg, var(--primary), #8B8FFF); display: flex; align-items: center; justify-content: center; }
-        .brand-name { font-weight: 800; font-size: 18px; color: #fff; font-family: var(--font-display); }
+        .brand-mark { width: 42px; height: 42px; border-radius: 12px; background: var(--primary-gradient); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(109, 40, 217, 0.3); }
+        .brand-name { font-weight: 800; font-size: 20px; color: #fff; font-family: var(--font-display); letter-spacing: -0.5px; }
         .nav { display: flex; flex-direction: column; gap: 4px; flex: 1; }
-        .nav-item { display: flex; align-items: center; gap: 12px; padding: 11px 14px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 500; cursor: pointer; color: var(--sidebar-text); text-decoration: none; transition: 0.2s; }
-        .nav-item:hover { background: rgba(255,255,255,0.06); color: #fff; }
-        .nav-item.active { background: rgba(91,95,239,0.22); color: #fff; }
-        .main-col { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 500; cursor: pointer; color: var(--sidebar-text); text-decoration: none; transition: 0.2s; }
+        .nav-item:hover { background: rgba(255,255,255,0.08); color: #fff; }
+        .nav-item.active { background: var(--primary-gradient); color: #fff; box-shadow: 0 4px 12px rgba(109, 40, 217, 0.35); }
+        .nav-item i { width: 18px; height: 18px; }
+        
+        .main-col { flex: 1; display: flex; flex-direction: column; min-width: 0; background: var(--bg); }
         .topbar { padding: 26px 36px 18px; display: flex; justify-content: space-between; align-items: center; }
         .content { padding: 8px 36px 40px; flex: 1; }
         .page { display: none; }
         .page.active { display: block; }
 
         /* UI Components */
-        .btn { display: inline-flex; align-items: center; gap: 8px; border: none; border-radius: var(--radius-sm); font-size: 13.5px; font-weight: 600; padding: 10px 16px; cursor: pointer; }
-        .btn-primary { background: var(--primary); color: #fff; }
+        .btn { display: inline-flex; align-items: center; gap: 8px; border: none; border-radius: var(--radius-sm); font-size: 13.5px; font-weight: 600; padding: 10px 16px; cursor: pointer; transition: 0.2s; }
+        .btn-primary { background: var(--primary-gradient); color: #fff; box-shadow: 0 4px 12px rgba(109, 40, 217, 0.25); }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(109, 40, 217, 0.35); }
         .btn-secondary { background: var(--surface); border: 1px solid var(--border); color: var(--text); }
-        .btn-danger { background: var(--danger); color: #fff; }
+        .btn-danger { background: #FEE9EC; color: #F43F5E; }
+        .btn-icon { background: var(--surface-alt); border: 1px solid var(--border); width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 8px; cursor: pointer; }
+        .btn-icon:hover { background: var(--border); }
+
+        .toolbar { background: var(--surface); padding: 16px 20px; border-radius: var(--radius-lg); border: 1px solid var(--border); margin-bottom: 18px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; box-shadow: var(--shadow-sm); }
+        .input, .select { padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-family: var(--font-body); font-size: 13.5px; background: var(--surface-alt); min-width: 150px; }
+        .input:focus, .select:focus { outline: none; border-color: var(--primary); background: #fff; }
+
         .stat-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 18px; margin-bottom: 22px; }
-        .stat-card { background: var(--surface); padding: 20px; border-radius: var(--radius-lg); border: 1px solid var(--border); }
-        .icon-badge { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; }
-        .stat-value { font-size: 24px; font-weight: 800; font-family: var(--font-display); }
-        .stat-label { font-size: 12px; color: var(--text-dim); }
+        .stat-card { background: var(--surface); padding: 22px; border-radius: var(--radius-lg); border: 1px solid var(--border); transition: 0.2s; box-shadow: var(--shadow-sm); }
+        .stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+        .icon-badge { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 14px; }
+        .stat-value { font-size: 26px; font-weight: 800; font-family: var(--font-display); letter-spacing: -1px; }
+        .stat-label { font-size: 12.5px; color: var(--text-dim); font-weight: 500; }
         
-        .badge-employees { background: var(--c-employees-bg); color: var(--c-employees); }
-        .badge-attendance { background: var(--c-attendance-bg); color: var(--c-attendance); }
-        .badge-payroll { background: var(--c-payroll-bg); color: var(--c-payroll); }
-        .badge-departments { background: var(--c-departments-bg); color: var(--c-departments); }
-        .badge-leaves { background: var(--c-leaves-bg); color: var(--c-leaves); }
+        .badge-employees { background: #EAF1FF; color: #3E7BFA; }
+        .badge-attendance { background: #E4F9F0; color: #10B981; }
+        .badge-payroll { background: #E1F8FC; color: #06B6D4; }
+        .badge-departments { background: #F1ECFE; color: #8B5CF6; }
+        .badge-leaves { background: #FEE9EC; color: #F43F5E; }
 
         .chart-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 18px; margin-bottom: 18px; }
-        .panel { background: var(--surface); border-radius: var(--radius-lg); padding: 22px; border: 1px solid var(--border); }
-        .chart-wrap { height: 260px; position: relative; }
+        .panel { background: var(--surface); border-radius: var(--radius-lg); padding: 22px; border: 1px solid var(--border); box-shadow: var(--shadow-sm); }
+        .chart-wrap { height: 260px; position: relative; margin-top: 10px; }
         
         /* Tables */
-        .data-card { background: var(--surface); border-radius: var(--radius-lg); border: 1px solid var(--border); overflow: hidden; }
+        .data-card { background: var(--surface); border-radius: var(--radius-lg); border: 1px solid var(--border); overflow: hidden; box-shadow: var(--shadow-sm); }
         .data-table { width: 100%; border-collapse: collapse; }
-        .data-table th { background: var(--surface-alt); text-align: left; padding: 12px 20px; font-size: 11px; text-transform: uppercase; color: var(--text-faint); }
+        .data-table th { background: var(--surface-alt); text-align: left; padding: 14px 20px; font-size: 11px; text-transform: uppercase; color: var(--text-faint); font-weight: 700; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
         .data-table td { padding: 14px 20px; border-bottom: 1px solid var(--border); font-size: 13.5px; }
+        .data-table tr:last-child td { border-bottom: none; }
+        .data-table tr:hover { background: var(--surface-alt); }
         
-        /* Status Pills */
         .pill { padding: 4px 10px; border-radius: 99px; font-size: 11px; font-weight: 700; text-transform: capitalize; }
         .pill-active, .pill-present, .pill-paid { background: #E4F9F0; color: #0F9D6D; }
-        .pill-inactive, .pill-pending, .pill-late { background: #FFF4E0; color: #B8790C; }
+        .pill-inactive, .pill-pending, .pill-late, .pill-half_day { background: #FFF4E0; color: #B8790C; }
         .pill-terminated, .pill-absent { background: #FEE9EC; color: #E11D48; }
 
         /* Modals */
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(15, 17, 42, 0.6); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 1000; }
         .modal-overlay.show { display: flex; }
-        .modal { background: #fff; padding: 24px; border-radius: var(--radius-lg); width: 500px; max-width: 90%; max-height: 90vh; overflow-y: auto; }
+        .modal { background: #fff; padding: 28px; border-radius: var(--radius-lg); width: 540px; max-width: 90%; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-lg); }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
         .form-group { margin-bottom: 16px; display: flex; flex-direction: column; gap: 6px; }
         .form-group label { font-size: 12px; font-weight: 600; color: var(--text-dim); }
         .form-group input, .form-group select { padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-family: var(--font-body); font-size: 14px; }
 
         /* Toast */
         .toast-root { position: fixed; top: 20px; right: 20px; z-index: 2000; }
-        .toast { background: #333; color: #fff; padding: 12px 20px; border-radius: 8px; margin-bottom: 10px; animation: slideIn 0.3s; }
-        @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+        .toast { background: #333; color: #fff; padding: 12px 20px; border-radius: 8px; margin-bottom: 10px; animation: slideIn 0.3s; box-shadow: var(--shadow-lg); }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+        /* Login View */
+        .login-view { display: flex; height: 100vh; background: #fff; }
+        .login-art { flex: 1.2; background: var(--primary-gradient); position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; padding: 60px; color: #fff; }
+        .login-art::before { content: ''; position: absolute; top: -10%; left: -10%; width: 400px; height: 400px; background: rgba(255,255,255,0.1); border-radius: 50%; }
+        .login-art::after { content: ''; position: absolute; bottom: -20%; right: -10%; width: 500px; height: 500px; background: rgba(255,255,255,0.05); border-radius: 50%; }
+        .login-logo { position: absolute; top: 60px; left: 60px; display: flex; align-items: center; gap: 12px; z-index: 2; }
+        .login-content { position: relative; z-index: 2; }
+        .login-content h1 { font-size: 42px; font-weight: 800; line-height: 1.2; margin-bottom: 16px; }
+        .login-content p { font-size: 16px; opacity: 0.9; max-width: 400px; line-height: 1.5; }
+        
+        .login-form-wrap { flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px; }
+        .login-form { width: 100%; max-width: 380px; }
+        .login-form h2 { font-size: 28px; margin-bottom: 8px; }
+        .login-form .sub { color: var(--text-dim); margin-bottom: 32px; font-size: 14px; }
     </style>
 </head>
 <body>
 
-<div class="app-shell">
+<!-- Auth View -->
+<div id="loginView" class="login-view">
+    <div class="login-art">
+        <div class="login-logo">
+            <div class="brand-mark" style="background: rgba(255,255,255,0.2); box-shadow: none;"><i data-lucide="orbit" style="color:#fff"></i></div>
+            <span class="brand-name">Orbit HR</span>
+        </div>
+        <div class="login-content">
+            <h1>Command your workforce.<br>Elevate your HR.</h1>
+            <p>The unified platform for modern human capital management. Streamline hiring, attendance, payroll, and analytics in one orbit.</p>
+        </div>
+    </div>
+    <div class="login-form-wrap">
+        <div class="login-form">
+            <h2>Welcome Back</h2>
+            <p class="sub">Sign in to access your HR Command Center.</p>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" id="loginEmail" required placeholder="admin@orbit.hr">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="loginPass" required placeholder="••••••••">
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; padding: 12px; margin-top: 10px;">Sign In</button>
+                <p style="text-align: center; color: var(--text-faint); font-size: 12px; margin-top: 20px;">
+                    Demo creds: admin@orbit.hr / password123
+                </p>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- App View -->
+<div id="appView" class="app-shell" style="display: none;">
     <aside class="sidebar">
         <div class="brand">
             <div class="brand-mark"><i data-lucide="orbit" style="color:#fff"></i></div>
@@ -133,7 +187,10 @@
             <a href="#attendance" class="nav-item" onclick="navigate('attendance')"><i data-lucide="calendar-check"></i>Attendance</a>
             <a href="#payroll" class="nav-item" onclick="navigate('payroll')"><i data-lucide="wallet"></i>Payroll</a>
         </nav>
-        <div id="dbStatusPill" style="font-size: 11px; color: var(--text-faint); margin-top: 20px;">Checking status...</div>
+        <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 16px; margin-top: 16px;">
+            <button class="nav-item" style="width:100%; text-align:left;" onclick="logout()"><i data-lucide="log-out"></i>Logout</button>
+        </div>
+        <div id="dbStatusPill" style="font-size: 11px; color: var(--text-faint); margin-top: 20px; padding: 0 14px;">Checking status...</div>
     </aside>
 
     <div class="main-col">
@@ -146,7 +203,7 @@
         </header>
 
         <main class="content">
-            <!-- Dashboard Page -->
+            <!-- Dashboard -->
             <section id="page-dashboard" class="page active">
                 <div class="stat-grid" id="statGrid"></div>
                 <div class="chart-grid">
@@ -168,13 +225,23 @@
                     <div class="panel">
                         <h3>Status Breakdown</h3>
                         <div class="chart-wrap"><canvas id="statusPieChart"></canvas></div>
-                        <div id="statusLegend" style="margin-top: 15px; display: flex; flex-wrap: wrap; gap: 10px;"></div>
                     </div>
                 </div>
             </section>
 
-            <!-- Employees Page -->
+            <!-- Employees -->
             <section id="page-employees" class="page">
+                <div class="toolbar">
+                    <input type="text" id="empSearch" class="input" placeholder="Search name, code, email..." oninput="loadEmployees()">
+                    <select id="empFilterDept" class="select" onchange="loadEmployees()"></select>
+                    <select id="empFilterStatus" class="select" onchange="loadEmployees()">
+                        <option value="">All Statuses</option>
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                        <option value="on_leave">On Leave</option>
+                        <option value="terminated">Terminated</option>
+                    </select>
+                </div>
                 <div class="data-card">
                     <table class="data-table">
                         <thead>
@@ -185,8 +252,11 @@
                 </div>
             </section>
 
-            <!-- Departments Page -->
+            <!-- Departments -->
             <section id="page-departments" class="page">
+                <div class="toolbar">
+                    <input type="text" id="deptSearch" class="input" placeholder="Search departments..." oninput="loadDepartments()">
+                </div>
                 <div class="data-card">
                     <table class="data-table">
                         <thead><tr><th>Name</th><th>Location</th><th>Description</th><th>Actions</th></tr></thead>
@@ -195,8 +265,20 @@
                 </div>
             </section>
             
-            <!-- Attendance Page -->
+            <!-- Attendance -->
             <section id="page-attendance" class="page">
+                <div class="toolbar">
+                    <select id="attFilterEmp" class="select" onchange="loadAttendance()"></select>
+                    <input type="date" id="attFilterFrom" class="input" onchange="loadAttendance()">
+                    <input type="date" id="attFilterTo" class="input" onchange="loadAttendance()">
+                    <select id="attFilterStatus" class="select" onchange="loadAttendance()">
+                        <option value="">All Statuses</option>
+                        <option value="present">Present</option>
+                        <option value="absent">Absent</option>
+                        <option value="late">Late</option>
+                        <option value="half_day">Half Day</option>
+                    </select>
+                </div>
                 <div class="data-card">
                     <table class="data-table">
                         <thead><tr><th>Employee</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
@@ -205,8 +287,16 @@
                 </div>
             </section>
 
-            <!-- Payroll Page -->
+            <!-- Payroll -->
             <section id="page-payroll" class="page">
+                <div class="toolbar">
+                    <select id="payFilterEmp" class="select" onchange="loadPayroll()"></select>
+                    <select id="payFilterStatus" class="select" onchange="loadPayroll()">
+                        <option value="">All Statuses</option>
+                        <option value="pending">Pending</option>
+                        <option value="paid">Paid</option>
+                    </select>
+                </div>
                 <div class="data-card">
                     <table class="data-table">
                         <thead><tr><th>Employee</th><th>Period</th><th>Net Pay</th><th>Status</th><th>Actions</th></tr></thead>
@@ -222,16 +312,22 @@
 <div class="modal-overlay" id="employeeModal">
     <div class="modal">
         <h3 id="empModalTitle">Add Employee</h3>
-        <form id="empForm" style="margin-top: 15px;">
+        <form id="empForm" style="margin-top: 20px;">
             <input type="hidden" id="empId">
-            <div class="form-group"><label>Employee Code</label><input type="text" id="empCode" required></div>
-            <div class="form-group"><label>First Name</label><input type="text" id="empFirst" required></div>
-            <div class="form-group"><label>Last Name</label><input type="text" id="empLast" required></div>
-            <div class="form-group"><label>Email</label><input type="email" id="empEmail" required></div>
-            <div class="form-group"><label>Salary</label><input type="number" id="empSalary" required></div>
-            <div class="form-group">
-                <label>Department</label>
-                <select id="empDept"><option value="">None</option></select>
+            <div class="form-grid">
+                <div class="form-group"><label>First Name</label><input type="text" id="empFirst" required></div>
+                <div class="form-group"><label>Last Name</label><input type="text" id="empLast" required></div>
+            </div>
+            <div class="form-grid">
+                <div class="form-group"><label>Employee Code</label><input type="text" id="empCode" required></div>
+                <div class="form-group"><label>Email</label><input type="email" id="empEmail" required></div>
+            </div>
+            <div class="form-grid">
+                <div class="form-group"><label>Salary ($)</label><input type="number" id="empSalary" required></div>
+                <div class="form-group">
+                    <label>Department</label>
+                    <select id="empDept"><option value="">None</option></select>
+                </div>
             </div>
             <div class="form-group">
                 <label>Status</label>
@@ -253,7 +349,7 @@
 <div class="modal-overlay" id="deptModal">
     <div class="modal">
         <h3 id="deptModalTitle">Add Department</h3>
-        <form id="deptForm" style="margin-top: 15px;">
+        <form id="deptForm" style="margin-top: 20px;">
             <input type="hidden" id="deptId">
             <div class="form-group"><label>Name</label><input type="text" id="deptName" required></div>
             <div class="form-group"><label>Location</label><input type="text" id="deptLocation"></div>
@@ -269,7 +365,7 @@
 <div class="modal-overlay" id="attModal">
     <div class="modal">
         <h3 id="attModalTitle">Log Attendance</h3>
-        <form id="attForm" style="margin-top: 15px;">
+        <form id="attForm" style="margin-top: 20px;">
             <input type="hidden" id="attId">
             <div class="form-group">
                 <label>Employee</label>
@@ -296,27 +392,29 @@
 <div class="modal-overlay" id="payrollModal">
     <div class="modal">
         <h3 id="payrollModalTitle">Generate Payroll</h3>
-        <form id="payrollForm" style="margin-top: 15px;">
+        <form id="payrollForm" style="margin-top: 20px;">
             <input type="hidden" id="payrollId">
             <div class="form-group">
                 <label>Employee</label>
-                <select id="payrollEmp" required></select>
+                <select id="payrollEmp" required onchange="autoFillSalary()"></select>
             </div>
-            <div style="display: flex; gap: 10px;">
-                <div class="form-group" style="flex:1"><label>Month</label><input type="number" id="payrollMonth" min="1" max="12" required></div>
-                <div class="form-group" style="flex:1"><label>Year</label><input type="number" id="payrollYear" required></div>
+            <div class="form-grid">
+                <div class="form-group"><label>Month (1-12)</label><input type="number" id="payrollMonth" min="1" max="12" required></div>
+                <div class="form-group"><label>Year</label><input type="number" id="payrollYear" required></div>
             </div>
-            <div style="display: flex; gap: 10px;">
-                <div class="form-group" style="flex:1"><label>Basic Salary</label><input type="number" id="payrollBasic" required></div>
-                <div class="form-group" style="flex:1"><label>Allowances</label><input type="number" id="payrollAllow"></div>
-                <div class="form-group" style="flex:1"><label>Deductions</label><input type="number" id="payrollDeduct"></div>
+            <div class="form-grid">
+                <div class="form-group"><label>Basic Salary</label><input type="number" id="payrollBasic" required></div>
+                <div class="form-group"><label>Allowances</label><input type="number" id="payrollAllow" value="0"></div>
             </div>
-            <div class="form-group">
-                <label>Status</label>
-                <select id="payrollStatus">
-                    <option value="pending">Pending</option>
-                    <option value="paid">Paid</option>
-                </select>
+            <div class="form-grid">
+                <div class="form-group"><label>Deductions</label><input type="number" id="payrollDeduct" value="0"></div>
+                <div class="form-group">
+                    <label>Status</label>
+                    <select id="payrollStatus">
+                        <option value="pending">Pending</option>
+                        <option value="paid">Paid</option>
+                    </select>
+                </div>
             </div>
             <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
                 <button type="button" class="btn btn-secondary" onclick="closeModal('payrollModal')">Cancel</button>
@@ -329,9 +427,6 @@
 <div id="toastRoot" class="toast-root"></div>
 
 <script>
-/* ==========================================================================
-   ORBIT HR — UTILITIES
-   ========================================================================== */
 const Api = {
     async request(method, url, body) {
         const opts = { method, headers: { "Content-Type": "application/json" } };
@@ -363,11 +458,40 @@ function escapeHtml(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "
 function closeModal(id) { document.getElementById(id).classList.remove('show'); }
 function openModal(id) { document.getElementById(id).classList.add('show'); lucide.createIcons(); }
 
-/* ==========================================================================
-   ORBIT HR — DASHBOARD & CHARTS
-   ========================================================================== */
+/* Auth Logic */
+function checkAuth() {
+    const token = localStorage.getItem("orbit_token");
+    if (!token) {
+        document.getElementById("loginView").style.display = "flex";
+        document.getElementById("appView").style.display = "none";
+    } else {
+        document.getElementById("loginView").style.display = "none";
+        document.getElementById("appView").style.display = "flex";
+        lucide.createIcons();
+    }
+}
+
+function logout() {
+    localStorage.removeItem("orbit_token");
+    checkAuth();
+}
+
+document.getElementById("loginForm").onsubmit = async (e) => {
+    e.preventDefault();
+    const email = document.getElementById("loginEmail").value;
+    const pass = document.getElementById("loginPass").value;
+    try {
+        const res = await Api.post("/api/login", { email, password: pass });
+        localStorage.setItem("orbit_token", res.token);
+        checkAuth();
+    } catch (err) {
+        showToast(err.message, "error");
+    }
+};
+
+/* Dashboard & Charts */
 let charts = {};
-const COLORS = ["#5B5FEF", "#3E7BFA", "#8B5CF6", "#F59E0B", "#10B981", "#F43F5E", "#06B6D4"];
+const COLORS = ["#6D28D9", "#4F46E5", "#8B5CF6", "#F59E0B", "#10B981", "#F43F5E", "#06B6D4"];
 
 function setupChartDefaults() {
     if (typeof Chart !== 'undefined') {
@@ -383,7 +507,7 @@ function renderHiringChart(trend) {
     if (charts.hiring) charts.hiring.destroy();
     charts.hiring = new Chart(ctx, {
         type: 'line',
-        data: { labels: trend.map(t => t.label), datasets: [{ data: trend.map(t => t.value), borderColor: "#5B5FEF", tension: 0.4, fill: true, backgroundColor: "rgba(91,95,239,0.05)" }] },
+        data: { labels: trend.map(t => t.label), datasets: [{ data: trend.map(t => t.value), borderColor: "#6D28D9", tension: 0.4, fill: true, backgroundColor: "rgba(109,40,217,0.05)" }] },
         options: { responsive: true, maintainAspectRatio: false }
     });
 }
@@ -439,7 +563,7 @@ async function loadDashboard() {
         const cards = [
             { l: "Employees", v: data.cards.total_employees, i: "users", b: "badge-employees" },
             { l: "Present Today", v: data.cards.present_today, i: "calendar-check", b: "badge-attendance" },
-            { l: "Active Payroll", v: formatCurrency(data.cards.total_monthly_salary), i: "wallet", b: "badge-payroll" },
+            { l: "Monthly Salary", v: formatCurrency(data.cards.total_monthly_salary), i: "wallet", b: "badge-payroll" },
             { l: "Departments", v: data.cards.total_departments, i: "building-2", b: "badge-departments" },
             { l: "Pending Leave", v: data.cards.pending_leaves, i: "plane-takeoff", b: "badge-leaves" }
         ];
@@ -461,21 +585,30 @@ async function loadDashboard() {
     }
 }
 
-/* ==========================================================================
-   ORBIT HR — EMPLOYEES
-   ========================================================================== */
+/* Employees */
 async function populateDeptDropdown() {
     const depts = await Api.get("/api/departments");
     const opts = depts.map(d => `<option value="${d.id}">${d.name}</option>`).join("");
+    
     document.getElementById("empDept").innerHTML = `<option value="">None</option>${opts}`;
-    return depts;
+    document.getElementById("empFilterDept").innerHTML = `<option value="">All Departments</option>${opts}`;
 }
 
 async function loadEmployees() {
     const body = document.getElementById("employeeTableBody");
     body.innerHTML = "<tr><td colspan='6'>Loading...</td></tr>";
+    
+    const search = document.getElementById("empSearch").value;
+    const dept = document.getElementById("empFilterDept").value;
+    const status = document.getElementById("empFilterStatus").value;
+    
+    let url = "/api/employees?";
+    if (search) url += `search=${encodeURIComponent(search)}&`;
+    if (dept) url += `department_id=${dept}&`;
+    if (status) url += `status=${status}&`;
+
     try {
-        const data = await Api.get("/api/employees");
+        const data = await Api.get(url);
         body.innerHTML = data.length ? data.map(e => `
             <tr>
                 <td><strong>${e.first_name} ${e.last_name}</strong></td>
@@ -483,14 +616,17 @@ async function loadEmployees() {
                 <td>${e.department ? e.department.name : '—'}</td>
                 <td><span class="pill pill-${e.status}">${e.status}</span></td>
                 <td>${formatCurrency(e.salary)}</td>
-                <td><button onclick="deleteEmployee(${e.id})" class="btn btn-danger" style="padding:5px 10px;">Delete</button></td>
+                <td style="display:flex; gap:6px;">
+                    <button onclick="openEmpModal(${e.id})" class="btn-icon"><i data-lucide="edit"></i></button>
+                    <button onclick="deleteEmployee(${e.id})" class="btn-icon" style="color:#F43F5E;"><i data-lucide="trash-2"></i></button>
+                </td>
             </tr>
         `).join("") : `<tr><td colspan="6" style="text-align:center;">No employees found.</td></tr>`;
+        lucide.createIcons();
     } catch (e) { showToast(e.message, "error"); }
 }
 
 async function openEmpModal(id = null) {
-    await populateDeptDropdown();
     document.getElementById("empForm").reset();
     document.getElementById("empId").value = "";
     document.getElementById("empModalTitle").textContent = "Add Employee";
@@ -515,27 +651,43 @@ async function deleteEmployee(id) {
     catch (e) { showToast(e.message, "error"); }
 }
 
-/* ==========================================================================
-   ORBIT HR — DEPARTMENTS
-   ========================================================================== */
+/* Departments */
 async function loadDepartments() {
     const body = document.getElementById("deptTableBody");
     body.innerHTML = "<tr><td colspan='4'>Loading...</td></tr>";
+    const search = document.getElementById("deptSearch").value;
+    let url = "/api/departments?";
+    if (search) url += `search=${encodeURIComponent(search)}`;
+
     try {
-        const data = await Api.get("/api/departments");
+        const data = await Api.get(url);
         body.innerHTML = data.length ? data.map(d => `
             <tr>
                 <td><strong>${d.name}</strong></td>
                 <td>${d.location || '—'}</td>
                 <td>${d.description || '—'}</td>
-                <td><button onclick="deleteDepartment(${d.id})" class="btn btn-danger" style="padding:5px 10px;">Delete</button></td>
+                <td style="display:flex; gap:6px;">
+                    <button onclick="openDeptModal(${d.id})" class="btn-icon"><i data-lucide="edit"></i></button>
+                    <button onclick="deleteDepartment(${d.id})" class="btn-icon" style="color:#F43F5E;"><i data-lucide="trash-2"></i></button>
+                </td>
             </tr>
         `).join("") : `<tr><td colspan="4" style="text-align:center;">No departments found.</td></tr>`;
+        lucide.createIcons();
     } catch (e) { showToast(e.message, "error"); }
 }
 
-async function openDeptModal() {
+async function openDeptModal(id = null) {
     document.getElementById("deptForm").reset();
+    document.getElementById("deptId").value = "";
+    document.getElementById("deptModalTitle").textContent = "Add Department";
+    if (id) {
+        document.getElementById("deptModalTitle").textContent = "Edit Department";
+        const dept = await Api.get(`/api/departments/${id}`);
+        document.getElementById("deptId").value = dept.id;
+        document.getElementById("deptName").value = dept.name;
+        document.getElementById("deptLocation").value = dept.location;
+        document.getElementById("deptDesc").value = dept.description;
+    }
     openModal('deptModal');
 }
 
@@ -545,35 +697,68 @@ async function deleteDepartment(id) {
     catch (e) { showToast(e.message, "error"); }
 }
 
-/* ==========================================================================
-   ORBIT HR — ATTENDANCE
-   ========================================================================== */
-async function populateEmpDropdown(selectId) {
+/* Attendance */
+async function populateEmpDropdown() {
     const emps = await Api.get("/api/employees");
     const opts = emps.map(e => `<option value="${e.id}">${e.first_name} ${e.last_name} (${e.employee_code})</option>`).join("");
-    document.getElementById(selectId).innerHTML = opts;
+    
+    document.getElementById("attEmp").innerHTML = opts;
+    document.getElementById("payrollEmp").innerHTML = opts;
+    
+    const filterOpts = `<option value="">All Employees</option>${opts}`;
+    document.getElementById("attFilterEmp").innerHTML = filterOpts;
+    document.getElementById("payFilterEmp").innerHTML = filterOpts;
 }
 
 async function loadAttendance() {
     const body = document.getElementById("attTableBody");
     body.innerHTML = "<tr><td colspan='4'>Loading...</td></tr>";
+    
+    const emp = document.getElementById("attFilterEmp").value;
+    const from = document.getElementById("attFilterFrom").value;
+    const to = document.getElementById("attFilterTo").value;
+    const status = document.getElementById("attFilterStatus").value;
+
+    let url = "/api/attendance?";
+    if (emp) url += `employee_id=${emp}&`;
+    if (from) url += `from=${from}&`;
+    if (to) url += `to=${to}&`;
+    if (status) url += `status=${status}&`;
+
     try {
-        const data = await Api.get("/api/attendance");
+        const data = await Api.get(url);
         body.innerHTML = data.length ? data.map(a => `
             <tr>
                 <td>${a.employee ? `${a.employee.first_name} ${a.employee.last_name}` : '—'}</td>
                 <td>${formatDate(a.date)}</td>
                 <td><span class="pill pill-${a.status}">${a.status}</span></td>
-                <td><button onclick="deleteAttendance(${a.id})" class="btn btn-danger" style="padding:5px 10px;">Delete</button></td>
+                <td style="display:flex; gap:6px;">
+                    <button onclick="openAttModal(${a.id})" class="btn-icon"><i data-lucide="edit"></i></button>
+                    <button onclick="deleteAttendance(${a.id})" class="btn-icon" style="color:#F43F5E;"><i data-lucide="trash-2"></i></button>
+                </td>
             </tr>
         `).join("") : `<tr><td colspan="4" style="text-align:center;">No records found.</td></tr>`;
+        lucide.createIcons();
     } catch (e) { showToast(e.message, "error"); }
 }
 
-async function openAttModal() {
-    await populateEmpDropdown("attEmp");
+async function openAttModal(id = null) {
     document.getElementById("attForm").reset();
-    document.getElementById("attDate").valueAsDate = new Date();
+    document.getElementById("attId").value = "";
+    document.getElementById("attModalTitle").textContent = "Log Attendance";
+    if (id) {
+        document.getElementById("attModalTitle").textContent = "Edit Attendance";
+        const att = await Api.get(`/api/attendance/${id}`); // Assuming GET single exists or fetch all and filter
+        // Since no single endpoint, fetch all and find
+        const all = await Api.get("/api/attendance");
+        const a = all.find(x => x.id === id);
+        document.getElementById("attId").value = a.id;
+        document.getElementById("attEmp").value = a.employee_id;
+        document.getElementById("attDate").value = a.date;
+        document.getElementById("attStatus").value = a.status;
+    } else {
+        document.getElementById("attDate").valueAsDate = new Date();
+    }
     openModal('attModal');
 }
 
@@ -583,32 +768,64 @@ async function deleteAttendance(id) {
     catch (e) { showToast(e.message, "error"); }
 }
 
-/* ==========================================================================
-   ORBIT HR — PAYROLL
-   ========================================================================== */
+/* Payroll */
 async function loadPayroll() {
     const body = document.getElementById("payrollTableBody");
     body.innerHTML = "<tr><td colspan='5'>Loading...</td></tr>";
+    
+    const emp = document.getElementById("payFilterEmp").value;
+    const status = document.getElementById("payFilterStatus").value;
+    
+    let url = "/api/payroll?";
+    if (emp) url += `employee_id=${emp}&`;
+    if (status) url += `status=${status}&`;
+
     try {
-        const data = await Api.get("/api/payroll");
+        const data = await Api.get(url);
         body.innerHTML = data.length ? data.map(p => `
             <tr>
                 <td>${p.employee ? `${p.employee.first_name} ${p.employee.last_name}` : '—'}</td>
                 <td>${p.month}/${p.year}</td>
                 <td>${formatCurrency(p.net_salary)}</td>
                 <td><span class="pill pill-${p.status}">${p.status}</span></td>
-                <td><button onclick="deletePayroll(${p.id})" class="btn btn-danger" style="padding:5px 10px;">Delete</button></td>
+                <td style="display:flex; gap:6px;">
+                    <button onclick="openPayrollModal(${p.id})" class="btn-icon"><i data-lucide="edit"></i></button>
+                    <button onclick="deletePayroll(${p.id})" class="btn-icon" style="color:#F43F5E;"><i data-lucide="trash-2"></i></button>
+                </td>
             </tr>
         `).join("") : `<tr><td colspan="5" style="text-align:center;">No payroll records found.</td></tr>`;
+        lucide.createIcons();
     } catch (e) { showToast(e.message, "error"); }
 }
 
-async function openPayrollModal() {
-    await populateEmpDropdown("payrollEmp");
+async function autoFillSalary() {
+    const empId = document.getElementById("payrollEmp").value;
+    if (!empId) return;
+    const emp = await Api.get(`/api/employees/${empId}`);
+    document.getElementById("payrollBasic").value = emp.salary || 0;
+}
+
+async function openPayrollModal(id = null) {
     document.getElementById("payrollForm").reset();
-    const now = new Date();
-    document.getElementById("payrollMonth").value = now.getMonth() + 1;
-    document.getElementById("payrollYear").value = now.getFullYear();
+    document.getElementById("payrollId").value = "";
+    document.getElementById("payrollModalTitle").textContent = "Generate Payroll";
+    if (id) {
+        document.getElementById("payrollModalTitle").textContent = "Edit Payroll";
+        const all = await Api.get("/api/payroll");
+        const p = all.find(x => x.id === id);
+        document.getElementById("payrollId").value = p.id;
+        document.getElementById("payrollEmp").value = p.employee_id;
+        document.getElementById("payrollMonth").value = p.month;
+        document.getElementById("payrollYear").value = p.year;
+        document.getElementById("payrollBasic").value = p.basic_salary;
+        document.getElementById("payrollAllow").value = p.allowances;
+        document.getElementById("payrollDeduct").value = p.deductions;
+        document.getElementById("payrollStatus").value = p.status;
+    } else {
+        const now = new Date();
+        document.getElementById("payrollMonth").value = now.getMonth() + 1;
+        document.getElementById("payrollYear").value = now.getFullYear();
+    }
     openModal('payrollModal');
 }
 
@@ -618,15 +835,13 @@ async function deletePayroll(id) {
     catch (e) { showToast(e.message, "error"); }
 }
 
-/* ==========================================================================
-   ORBIT HR — ROUTING
-   ========================================================================== */
+/* Routing */
 const PAGES = {
     dashboard: { title: "Dashboard", sub: "Live Org Overview", load: loadDashboard, action: `` },
-    employees: { title: "Employees", sub: "Manage Workforce", load: loadEmployees, action: `<button class="btn btn-primary" onclick="openEmpModal()">Add Employee</button>` },
-    departments: { title: "Departments", sub: "Units & Groups", load: loadDepartments, action: `<button class="btn btn-primary" onclick="openDeptModal()">Add Department</button>` },
-    attendance: { title: "Attendance", sub: "Daily Records", load: loadAttendance, action: `<button class="btn btn-primary" onclick="openAttModal()">Log Attendance</button>` },
-    payroll: { title: "Payroll", sub: "Financial Records", load: loadPayroll, action: `<button class="btn btn-primary" onclick="openPayrollModal()">Generate Payroll</button>` }
+    employees: { title: "Employees", sub: "Manage Workforce", load: loadEmployees, action: `<button class="btn btn-primary" onclick="openEmpModal()"><i data-lucide="plus" style="width:16px;height:16px;"></i> Add Employee</button>` },
+    departments: { title: "Departments", sub: "Units & Groups", load: loadDepartments, action: `<button class="btn btn-primary" onclick="openDeptModal()"><i data-lucide="plus" style="width:16px;height:16px;"></i> Add Department</button>` },
+    attendance: { title: "Attendance", sub: "Daily Records", load: loadAttendance, action: `<button class="btn btn-primary" onclick="openAttModal()"><i data-lucide="plus" style="width:16px;height:16px;"></i> Log Attendance</button>` },
+    payroll: { title: "Payroll", sub: "Financial Records", load: loadPayroll, action: `<button class="btn btn-primary" onclick="openPayrollModal()"><i data-lucide="plus" style="width:16px;height:16px;"></i> Generate Payroll</button>` }
 };
 
 function navigate(pageId) {
@@ -642,12 +857,11 @@ function navigate(pageId) {
     lucide.createIcons();
 }
 
-/* ==========================================================================
-   INITIALIZATION
-   ========================================================================== */
+/* Init */
 document.addEventListener("DOMContentLoaded", () => {
     lucide.createIcons();
-    
+    checkAuth();
+
     Api.get("/healthz").then(d => {
         const p = document.getElementById("dbStatusPill");
         p.textContent = d.supabase_configured ? "● Database Connected" : "○ Database Offline";
@@ -656,6 +870,10 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("dbStatusPill").textContent = "● Server Offline";
         document.getElementById("dbStatusPill").style.color = "#F43F5E";
     });
+
+    // Populate all dropdowns initially
+    populateDeptDropdown();
+    populateEmpDropdown();
 
     // Form Submits
     document.getElementById("empForm").onsubmit = async (e) => {
@@ -682,29 +900,34 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.getElementById("deptForm").onsubmit = async (e) => {
         e.preventDefault();
+        const id = document.getElementById("deptId").value;
         const payload = {
             name: document.getElementById("deptName").value,
             location: document.getElementById("deptLocation").value,
             description: document.getElementById("deptDesc").value
         };
         try {
-            await Api.post("/api/departments", payload);
-            showToast("Department added!");
+            if (id) await Api.put(`/api/departments/${id}`, payload);
+            else await Api.post("/api/departments", payload);
+            showToast(id ? "Department updated!" : "Department added!");
             closeModal('deptModal');
             loadDepartments();
+            populateDeptDropdown();
         } catch (err) { showToast(err.message, "error"); }
     };
 
     document.getElementById("attForm").onsubmit = async (e) => {
         e.preventDefault();
+        const id = document.getElementById("attId").value;
         const payload = {
             employee_id: document.getElementById("attEmp").value,
             date: document.getElementById("attDate").value,
             status: document.getElementById("attStatus").value
         };
         try {
-            await Api.post("/api/attendance", payload);
-            showToast("Attendance logged!");
+            if (id) await Api.put(`/api/attendance/${id}`, payload);
+            else await Api.post("/api/attendance", payload);
+            showToast(id ? "Attendance updated!" : "Attendance logged!");
             closeModal('attModal');
             loadAttendance();
         } catch (err) { showToast(err.message, "error"); }
@@ -712,6 +935,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.getElementById("payrollForm").onsubmit = async (e) => {
         e.preventDefault();
+        const id = document.getElementById("payrollId").value;
         const payload = {
             employee_id: document.getElementById("payrollEmp").value,
             month: parseInt(document.getElementById("payrollMonth").value),
@@ -722,8 +946,9 @@ document.addEventListener("DOMContentLoaded", () => {
             status: document.getElementById("payrollStatus").value
         };
         try {
-            await Api.post("/api/payroll", payload);
-            showToast("Payroll generated!");
+            if (id) await Api.put(`/api/payroll/${id}`, payload);
+            else await Api.post("/api/payroll", payload);
+            showToast(id ? "Payroll updated!" : "Payroll generated!");
             closeModal('payrollModal');
             loadPayroll();
         } catch (err) { showToast(err.message, "error"); }
