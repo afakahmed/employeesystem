@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Orbit HR — Command Center</title>
+    <title>JavaGoat HR — Command Center</title>
     
     <!-- External Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
@@ -24,7 +24,7 @@
             --sidebar-bg-2: #1A1D3E;
             --sidebar-text: #C7C9E0;
             --sidebar-text-active: #FFFFFF;
-            --primary: #6D28D9; /* Violet 700 */
+            --primary: #6D28D9;
             --primary-light: #EDEDFC;
             --primary-gradient: linear-gradient(135deg, #7C3AED 0%, #4F46E5 100%);
             --success: #10B981;
@@ -52,7 +52,7 @@
         .brand { display: flex; align-items: center; gap: 12px; padding: 4px 8px 28px; }
         .brand-mark { width: 42px; height: 42px; border-radius: 12px; background: var(--primary-gradient); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(109, 40, 217, 0.3); }
         .brand-name { font-weight: 800; font-size: 20px; color: #fff; font-family: var(--font-display); letter-spacing: -0.5px; }
-        .nav { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+        .nav { display: flex; flex-direction: column; gap: 4px; flex: 1; overflow-y: auto; }
         .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 500; cursor: pointer; color: var(--sidebar-text); text-decoration: none; transition: 0.2s; }
         .nav-item:hover { background: rgba(255,255,255,0.08); color: #fff; }
         .nav-item.active { background: var(--primary-gradient); color: #fff; box-shadow: 0 4px 12px rgba(109, 40, 217, 0.35); }
@@ -77,19 +77,21 @@
         .input, .select { padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-family: var(--font-body); font-size: 13.5px; background: var(--surface-alt); min-width: 150px; }
         .input:focus, .select:focus { outline: none; border-color: var(--primary); background: #fff; }
 
-        .stat-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 18px; margin-bottom: 22px; }
-        .stat-card { background: var(--surface); padding: 22px; border-radius: var(--radius-lg); border: 1px solid var(--border); transition: 0.2s; box-shadow: var(--shadow-sm); }
-        .stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
-        .icon-badge { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 14px; }
-        .stat-value { font-size: 26px; font-weight: 800; font-family: var(--font-display); letter-spacing: -1px; }
-        .stat-label { font-size: 12.5px; color: var(--text-dim); font-weight: 500; }
+        .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-bottom: 22px; }
+        .stat-card { border: none; color: #fff; position: relative; overflow: hidden; transition: 0.2s; box-shadow: var(--shadow-md); padding: 24px; border-radius: var(--radius-lg); }
+        .stat-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+        .stat-card::after { content: ''; position: absolute; top: -20px; right: -20px; width: 120px; height: 120px; background: rgba(255,255,255,0.1); border-radius: 50%; }
+        .stat-card .stat-value, .stat-card .stat-label { color: #fff; position: relative; z-index: 2; }
+        .stat-card .icon-badge { background: rgba(255,255,255,0.2); color: #fff; position: relative; z-index: 2; }
         
-        .badge-employees { background: #EAF1FF; color: #3E7BFA; }
-        .badge-attendance { background: #E4F9F0; color: #10B981; }
-        .badge-payroll { background: #E1F8FC; color: #06B6D4; }
-        .badge-departments { background: #F1ECFE; color: #8B5CF6; }
-        .badge-leaves { background: #FEE9EC; color: #F43F5E; }
+        .stat-card.c-blue { background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%); }
+        .stat-card.c-green { background: linear-gradient(135deg, #10B981 0%, #059669 100%); }
+        .stat-card.c-orange { background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%); }
 
+        .icon-badge { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 14px; }
+        .stat-value { font-size: 28px; font-weight: 800; font-family: var(--font-display); letter-spacing: -1px; }
+        .stat-label { font-size: 13px; font-weight: 500; opacity: 0.9; }
+        
         .chart-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 18px; margin-bottom: 18px; }
         .panel { background: var(--surface); border-radius: var(--radius-lg); padding: 22px; border: 1px solid var(--border); box-shadow: var(--shadow-sm); }
         .chart-wrap { height: 260px; position: relative; margin-top: 10px; }
@@ -103,9 +105,9 @@
         .data-table tr:hover { background: var(--surface-alt); }
         
         .pill { padding: 4px 10px; border-radius: 99px; font-size: 11px; font-weight: 700; text-transform: capitalize; }
-        .pill-active, .pill-present, .pill-paid { background: #E4F9F0; color: #0F9D6D; }
+        .pill-active, .pill-present, .pill-paid, .pill-approved { background: #E4F9F0; color: #0F9D6D; }
         .pill-inactive, .pill-pending, .pill-late, .pill-half_day { background: #FFF4E0; color: #B8790C; }
-        .pill-terminated, .pill-absent { background: #FEE9EC; color: #E11D48; }
+        .pill-terminated, .pill-absent, .pill-rejected { background: #FEE9EC; color: #E11D48; }
 
         /* Modals */
         .modal-overlay { position: fixed; inset: 0; background: rgba(15, 17, 42, 0.6); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 1000; }
@@ -143,8 +145,8 @@
 <div id="loginView" class="login-view">
     <div class="login-art">
         <div class="login-logo">
-            <div class="brand-mark" style="background: rgba(255,255,255,0.2); box-shadow: none;"><i data-lucide="orbit" style="color:#fff"></i></div>
-            <span class="brand-name">Orbit HR</span>
+            <div class="brand-mark" style="background: rgba(255,255,255,0.2); box-shadow: none;"><i data-lucide="coffee" style="color:#fff"></i></div>
+            <span class="brand-name">JavaGoat</span>
         </div>
         <div class="login-content">
             <h1>Command your workforce.<br>Elevate your HR.</h1>
@@ -158,7 +160,7 @@
             <form id="loginForm">
                 <div class="form-group">
                     <label>Email Address</label>
-                    <input type="email" id="loginEmail" required placeholder="admin@orbit.hr">
+                    <input type="email" id="loginEmail" required placeholder="admin@javagoat.hr">
                 </div>
                 <div class="form-group">
                     <label>Password</label>
@@ -166,7 +168,7 @@
                 </div>
                 <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; padding: 12px; margin-top: 10px;">Sign In</button>
                 <p style="text-align: center; color: var(--text-faint); font-size: 12px; margin-top: 20px;">
-                    Demo creds: admin@orbit.hr / password123
+                    Demo creds: admin@javagoat.hr / password123
                 </p>
             </form>
         </div>
@@ -177,14 +179,16 @@
 <div id="appView" class="app-shell" style="display: none;">
     <aside class="sidebar">
         <div class="brand">
-            <div class="brand-mark"><i data-lucide="orbit" style="color:#fff"></i></div>
-            <span class="brand-name">Orbit HR</span>
+            <div class="brand-mark"><i data-lucide="coffee" style="color:#fff"></i></div>
+            <span class="brand-name">JavaGoat</span>
         </div>
         <nav class="nav">
             <a href="#dashboard" class="nav-item active" onclick="navigate('dashboard')"><i data-lucide="layout-dashboard"></i>Dashboard</a>
             <a href="#employees" class="nav-item" onclick="navigate('employees')"><i data-lucide="users"></i>Employees</a>
             <a href="#departments" class="nav-item" onclick="navigate('departments')"><i data-lucide="building-2"></i>Departments</a>
+            <a href="#positions" class="nav-item" onclick="navigate('positions')"><i data-lucide="briefcase"></i>Positions</a>
             <a href="#attendance" class="nav-item" onclick="navigate('attendance')"><i data-lucide="calendar-check"></i>Attendance</a>
+            <a href="#leaves" class="nav-item" onclick="navigate('leaves')"><i data-lucide="plane-takeoff"></i>Leaves</a>
             <a href="#payroll" class="nav-item" onclick="navigate('payroll')"><i data-lucide="wallet"></i>Payroll</a>
         </nav>
         <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 16px; margin-top: 16px;">
@@ -264,6 +268,19 @@
                     </table>
                 </div>
             </section>
+
+            <!-- Positions -->
+            <section id="page-positions" class="page">
+                <div class="toolbar">
+                    <input type="text" id="posSearch" class="input" placeholder="Search job titles..." oninput="loadPositions()">
+                </div>
+                <div class="data-card">
+                    <table class="data-table">
+                        <thead><tr><th>Title</th><th>Department</th><th>Min Salary</th><th>Max Salary</th><th>Actions</th></tr></thead>
+                        <tbody id="posTableBody"></tbody>
+                    </table>
+                </div>
+            </section>
             
             <!-- Attendance -->
             <section id="page-attendance" class="page">
@@ -283,6 +300,25 @@
                     <table class="data-table">
                         <thead><tr><th>Employee</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
                         <tbody id="attTableBody"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Leaves -->
+            <section id="page-leaves" class="page">
+                <div class="toolbar">
+                    <select id="leaveFilterEmp" class="select" onchange="loadLeaves()"></select>
+                    <select id="leaveFilterStatus" class="select" onchange="loadLeaves()">
+                        <option value="">All Statuses</option>
+                        <option value="pending">Pending</option>
+                        <option value="approved">Approved</option>
+                        <option value="rejected">Rejected</option>
+                    </select>
+                </div>
+                <div class="data-card">
+                    <table class="data-table">
+                        <thead><tr><th>Employee</th><th>Type</th><th>Start Date</th><th>End Date</th><th>Status</th><th>Actions</th></tr></thead>
+                        <tbody id="leaveTableBody"></tbody>
                     </table>
                 </div>
             </section>
@@ -362,6 +398,28 @@
     </div>
 </div>
 
+<div class="modal-overlay" id="posModal">
+    <div class="modal">
+        <h3 id="posModalTitle">Add Position</h3>
+        <form id="posForm" style="margin-top: 20px;">
+            <input type="hidden" id="posId">
+            <div class="form-group"><label>Job Title</label><input type="text" id="posTitle" required></div>
+            <div class="form-group">
+                <label>Department</label>
+                <select id="posDept"><option value="">None</option></select>
+            </div>
+            <div class="form-grid">
+                <div class="form-group"><label>Min Salary ($)</label><input type="number" id="posMinSal" required></div>
+                <div class="form-group"><label>Max Salary ($)</label><input type="number" id="posMaxSal" required></div>
+            </div>
+            <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('posModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <div class="modal-overlay" id="attModal">
     <div class="modal">
         <h3 id="attModalTitle">Log Attendance</h3>
@@ -383,6 +441,44 @@
             </div>
             <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
                 <button type="button" class="btn btn-secondary" onclick="closeModal('attModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal-overlay" id="leaveModal">
+    <div class="modal">
+        <h3 id="leaveModalTitle">Request Leave</h3>
+        <form id="leaveForm" style="margin-top: 20px;">
+            <input type="hidden" id="leaveId">
+            <div class="form-group">
+                <label>Employee</label>
+                <select id="leaveEmp" required></select>
+            </div>
+            <div class="form-group">
+                <label>Leave Type</label>
+                <select id="leaveType">
+                    <option value="sick">Sick</option>
+                    <option value="casual">Casual</option>
+                    <option value="annual">Annual</option>
+                    <option value="unpaid">Unpaid</option>
+                </select>
+            </div>
+            <div class="form-grid">
+                <div class="form-group"><label>Start Date</label><input type="date" id="leaveStart" required></div>
+                <div class="form-group"><label>End Date</label><input type="date" id="leaveEnd" required></div>
+            </div>
+            <div class="form-group">
+                <label>Status</label>
+                <select id="leaveStatus">
+                    <option value="pending">Pending</option>
+                    <option value="approved">Approved</option>
+                    <option value="rejected">Rejected</option>
+                </select>
+            </div>
+            <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('leaveModal')">Cancel</button>
                 <button type="submit" class="btn btn-primary">Save</button>
             </div>
         </form>
@@ -460,7 +556,7 @@ function openModal(id) { document.getElementById(id).classList.add('show'); luci
 
 /* Auth Logic */
 function checkAuth() {
-    const token = localStorage.getItem("orbit_token");
+    const token = localStorage.getItem("javagoat_token");
     if (!token) {
         document.getElementById("loginView").style.display = "flex";
         document.getElementById("appView").style.display = "none";
@@ -472,7 +568,7 @@ function checkAuth() {
 }
 
 function logout() {
-    localStorage.removeItem("orbit_token");
+    localStorage.removeItem("javagoat_token");
     checkAuth();
 }
 
@@ -482,7 +578,7 @@ document.getElementById("loginForm").onsubmit = async (e) => {
     const pass = document.getElementById("loginPass").value;
     try {
         const res = await Api.post("/api/login", { email, password: pass });
-        localStorage.setItem("orbit_token", res.token);
+        localStorage.setItem("javagoat_token", res.token);
         checkAuth();
     } catch (err) {
         showToast(err.message, "error");
@@ -560,16 +656,15 @@ async function loadDashboard() {
     try {
         const data = await Api.get("/api/dashboard/stats");
         const grid = document.getElementById("statGrid");
+        // Limited to 3 Colorful Cards
         const cards = [
-            { l: "Employees", v: data.cards.total_employees, i: "users", b: "badge-employees" },
-            { l: "Present Today", v: data.cards.present_today, i: "calendar-check", b: "badge-attendance" },
-            { l: "Monthly Salary", v: formatCurrency(data.cards.total_monthly_salary), i: "wallet", b: "badge-payroll" },
-            { l: "Departments", v: data.cards.total_departments, i: "building-2", b: "badge-departments" },
-            { l: "Pending Leave", v: data.cards.pending_leaves, i: "plane-takeoff", b: "badge-leaves" }
+            { l: "Total Employees", v: data.cards.total_employees, i: "users", c: "c-blue" },
+            { l: "Present Today", v: data.cards.present_today, i: "calendar-check", c: "c-green" },
+            { l: "Monthly Payroll", v: formatCurrency(data.cards.total_monthly_salary), i: "wallet", c: "c-orange" }
         ];
         grid.innerHTML = cards.map(c => `
-            <div class="stat-card">
-                <div class="icon-badge ${c.b}"><i data-lucide="${c.i}"></i></div>
+            <div class="stat-card ${c.c}">
+                <div class="icon-badge"><i data-lucide="${c.i}"></i></div>
                 <div class="stat-value">${c.v}</div>
                 <div class="stat-label">${c.l}</div>
             </div>
@@ -592,6 +687,7 @@ async function populateDeptDropdown() {
     
     document.getElementById("empDept").innerHTML = `<option value="">None</option>${opts}`;
     document.getElementById("empFilterDept").innerHTML = `<option value="">All Departments</option>${opts}`;
+    document.getElementById("posDept").innerHTML = `<option value="">None</option>${opts}`;
 }
 
 async function loadEmployees() {
@@ -693,21 +789,71 @@ async function openDeptModal(id = null) {
 
 async function deleteDepartment(id) {
     if (!confirm("Delete department?")) return;
-    try { await Api.del(`/api/departments/${id}`); showToast("Department removed"); loadDepartments(); } 
+    try { await Api.del(`/api/departments/${id}`); showToast("Department removed"); loadDepartments(); populateDeptDropdown(); } 
     catch (e) { showToast(e.message, "error"); }
 }
 
-/* Attendance */
+/* Positions */
+async function loadPositions() {
+    const body = document.getElementById("posTableBody");
+    body.innerHTML = "<tr><td colspan='5'>Loading...</td></tr>";
+    const search = document.getElementById("posSearch").value;
+    let url = "/api/positions?";
+    if (search) url += `search=${encodeURIComponent(search)}`;
+
+    try {
+        const data = await Api.get(url);
+        body.innerHTML = data.length ? data.map(p => `
+            <tr>
+                <td><strong>${p.title}</strong></td>
+                <td>${p.department ? p.department.name : '—'}</td>
+                <td>${formatCurrency(p.min_salary)}</td>
+                <td>${formatCurrency(p.max_salary)}</td>
+                <td style="display:flex; gap:6px;">
+                    <button onclick="openPosModal(${p.id})" class="btn-icon"><i data-lucide="edit"></i></button>
+                    <button onclick="deletePosition(${p.id})" class="btn-icon" style="color:#F43F5E;"><i data-lucide="trash-2"></i></button>
+                </td>
+            </tr>
+        `).join("") : `<tr><td colspan="5" style="text-align:center;">No positions found.</td></tr>`;
+        lucide.createIcons();
+    } catch (e) { showToast(e.message, "error"); }
+}
+
+async function openPosModal(id = null) {
+    document.getElementById("posForm").reset();
+    document.getElementById("posId").value = "";
+    document.getElementById("posModalTitle").textContent = "Add Position";
+    if (id) {
+        document.getElementById("posModalTitle").textContent = "Edit Position";
+        const pos = await Api.get(`/api/positions/${id}`);
+        document.getElementById("posId").value = pos.id;
+        document.getElementById("posTitle").value = pos.title;
+        document.getElementById("posDept").value = pos.department_id || "";
+        document.getElementById("posMinSal").value = pos.min_salary;
+        document.getElementById("posMaxSal").value = pos.max_salary;
+    }
+    openModal('posModal');
+}
+
+async function deletePosition(id) {
+    if (!confirm("Delete position?")) return;
+    try { await Api.del(`/api/positions/${id}`); showToast("Position removed"); loadPositions(); } 
+    catch (e) { showToast(e.message, "error"); }
+}
+
+/* Attendance & Leaves */
 async function populateEmpDropdown() {
     const emps = await Api.get("/api/employees");
     const opts = emps.map(e => `<option value="${e.id}">${e.first_name} ${e.last_name} (${e.employee_code})</option>`).join("");
     
     document.getElementById("attEmp").innerHTML = opts;
     document.getElementById("payrollEmp").innerHTML = opts;
+    document.getElementById("leaveEmp").innerHTML = opts;
     
     const filterOpts = `<option value="">All Employees</option>${opts}`;
     document.getElementById("attFilterEmp").innerHTML = filterOpts;
     document.getElementById("payFilterEmp").innerHTML = filterOpts;
+    document.getElementById("leaveFilterEmp").innerHTML = filterOpts;
 }
 
 async function loadAttendance() {
@@ -748,8 +894,6 @@ async function openAttModal(id = null) {
     document.getElementById("attModalTitle").textContent = "Log Attendance";
     if (id) {
         document.getElementById("attModalTitle").textContent = "Edit Attendance";
-        const att = await Api.get(`/api/attendance/${id}`); // Assuming GET single exists or fetch all and filter
-        // Since no single endpoint, fetch all and find
         const all = await Api.get("/api/attendance");
         const a = all.find(x => x.id === id);
         document.getElementById("attId").value = a.id;
@@ -765,6 +909,60 @@ async function openAttModal(id = null) {
 async function deleteAttendance(id) {
     if (!confirm("Delete attendance record?")) return;
     try { await Api.del(`/api/attendance/${id}`); showToast("Record removed"); loadAttendance(); } 
+    catch (e) { showToast(e.message, "error"); }
+}
+
+async function loadLeaves() {
+    const body = document.getElementById("leaveTableBody");
+    body.innerHTML = "<tr><td colspan='6'>Loading...</td></tr>";
+    
+    const emp = document.getElementById("leaveFilterEmp").value;
+    const status = document.getElementById("leaveFilterStatus").value;
+
+    let url = "/api/leaves?";
+    if (emp) url += `employee_id=${emp}&`;
+    if (status) url += `status=${status}&`;
+
+    try {
+        const data = await Api.get(url);
+        body.innerHTML = data.length ? data.map(l => `
+            <tr>
+                <td>${l.employee ? `${l.employee.first_name} ${l.employee.last_name}` : '—'}</td>
+                <td>${l.leave_type}</td>
+                <td>${formatDate(l.start_date)}</td>
+                <td>${formatDate(l.end_date)}</td>
+                <td><span class="pill pill-${l.status}">${l.status}</span></td>
+                <td style="display:flex; gap:6px;">
+                    <button onclick="openLeaveModal(${l.id})" class="btn-icon"><i data-lucide="edit"></i></button>
+                    <button onclick="deleteLeave(${l.id})" class="btn-icon" style="color:#F43F5E;"><i data-lucide="trash-2"></i></button>
+                </td>
+            </tr>
+        `).join("") : `<tr><td colspan="6" style="text-align:center;">No leave requests found.</td></tr>`;
+        lucide.createIcons();
+    } catch (e) { showToast(e.message, "error"); }
+}
+
+async function openLeaveModal(id = null) {
+    document.getElementById("leaveForm").reset();
+    document.getElementById("leaveId").value = "";
+    document.getElementById("leaveModalTitle").textContent = "Request Leave";
+    if (id) {
+        document.getElementById("leaveModalTitle").textContent = "Edit Leave";
+        const all = await Api.get("/api/leaves");
+        const l = all.find(x => x.id === id);
+        document.getElementById("leaveId").value = l.id;
+        document.getElementById("leaveEmp").value = l.employee_id;
+        document.getElementById("leaveType").value = l.leave_type;
+        document.getElementById("leaveStart").value = l.start_date;
+        document.getElementById("leaveEnd").value = l.end_date;
+        document.getElementById("leaveStatus").value = l.status;
+    }
+    openModal('leaveModal');
+}
+
+async function deleteLeave(id) {
+    if (!confirm("Delete leave request?")) return;
+    try { await Api.del(`/api/leaves/${id}`); showToast("Leave removed"); loadLeaves(); } 
     catch (e) { showToast(e.message, "error"); }
 }
 
@@ -840,7 +1038,9 @@ const PAGES = {
     dashboard: { title: "Dashboard", sub: "Live Org Overview", load: loadDashboard, action: `` },
     employees: { title: "Employees", sub: "Manage Workforce", load: loadEmployees, action: `<button class="btn btn-primary" onclick="openEmpModal()"><i data-lucide="plus" style="width:16px;height:16px;"></i> Add Employee</button>` },
     departments: { title: "Departments", sub: "Units & Groups", load: loadDepartments, action: `<button class="btn btn-primary" onclick="openDeptModal()"><i data-lucide="plus" style="width:16px;height:16px;"></i> Add Department</button>` },
+    positions: { title: "Positions", sub: "Job Roles & Bands", load: loadPositions, action: `<button class="btn btn-primary" onclick="openPosModal()"><i data-lucide="plus" style="width:16px;height:16px;"></i> Add Position</button>` },
     attendance: { title: "Attendance", sub: "Daily Records", load: loadAttendance, action: `<button class="btn btn-primary" onclick="openAttModal()"><i data-lucide="plus" style="width:16px;height:16px;"></i> Log Attendance</button>` },
+    leaves: { title: "Leaves", sub: "Time Off Requests", load: loadLeaves, action: `<button class="btn btn-primary" onclick="openLeaveModal()"><i data-lucide="plus" style="width:16px;height:16px;"></i> Request Leave</button>` },
     payroll: { title: "Payroll", sub: "Financial Records", load: loadPayroll, action: `<button class="btn btn-primary" onclick="openPayrollModal()"><i data-lucide="plus" style="width:16px;height:16px;"></i> Generate Payroll</button>` }
 };
 
@@ -916,6 +1116,24 @@ document.addEventListener("DOMContentLoaded", () => {
         } catch (err) { showToast(err.message, "error"); }
     };
 
+    document.getElementById("posForm").onsubmit = async (e) => {
+        e.preventDefault();
+        const id = document.getElementById("posId").value;
+        const payload = {
+            title: document.getElementById("posTitle").value,
+            department_id: document.getElementById("posDept").value || null,
+            min_salary: parseFloat(document.getElementById("posMinSal").value),
+            max_salary: parseFloat(document.getElementById("posMaxSal").value)
+        };
+        try {
+            if (id) await Api.put(`/api/positions/${id}`, payload);
+            else await Api.post("/api/positions", payload);
+            showToast(id ? "Position updated!" : "Position added!");
+            closeModal('posModal');
+            loadPositions();
+        } catch (err) { showToast(err.message, "error"); }
+    };
+
     document.getElementById("attForm").onsubmit = async (e) => {
         e.preventDefault();
         const id = document.getElementById("attId").value;
@@ -930,6 +1148,25 @@ document.addEventListener("DOMContentLoaded", () => {
             showToast(id ? "Attendance updated!" : "Attendance logged!");
             closeModal('attModal');
             loadAttendance();
+        } catch (err) { showToast(err.message, "error"); }
+    };
+
+    document.getElementById("leaveForm").onsubmit = async (e) => {
+        e.preventDefault();
+        const id = document.getElementById("leaveId").value;
+        const payload = {
+            employee_id: document.getElementById("leaveEmp").value,
+            leave_type: document.getElementById("leaveType").value,
+            start_date: document.getElementById("leaveStart").value,
+            end_date: document.getElementById("leaveEnd").value,
+            status: document.getElementById("leaveStatus").value
+        };
+        try {
+            if (id) await Api.put(`/api/leaves/${id}`, payload);
+            else await Api.post("/api/leaves", payload);
+            showToast(id ? "Leave updated!" : "Leave requested!");
+            closeModal('leaveModal');
+            loadLeaves();
         } catch (err) { showToast(err.message, "error"); }
     };
 
