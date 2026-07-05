@@ -95,11 +95,18 @@
         .stat-value { font-size: 28px; font-weight: 800; font-family: var(--font-display); letter-spacing: -1px; }
         .stat-label { font-size: 13px; font-weight: 500; opacity: 0.9; }
         
-        /* Chart Grids */
+        /* Chart Grids & Panels */
         .chart-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-bottom: 18px; }
         .chart-grid-2 { display: grid; grid-template-columns: 1.4fr 1fr; gap: 18px; margin-bottom: 18px; }
         .panel { background: var(--surface); border-radius: var(--radius-lg); padding: 22px; border: 1px solid var(--border); box-shadow: var(--shadow-sm); }
         .chart-wrap { height: 240px; position: relative; margin-top: 10px; }
+        
+        /* Position List */
+        .pos-list { max-height: 240px; overflow-y: auto; margin-top: 10px; }
+        .pos-list-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); }
+        .pos-list-item:last-child { border-bottom: none; }
+        .pos-name { font-weight: 600; font-size: 14px; }
+        .pos-title { color: var(--text-dim); font-size: 12px; background: var(--surface-alt); padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border); }
         
         /* Tables */
         .data-card { background: var(--surface); border-radius: var(--radius-lg); border: 1px solid var(--border); overflow: hidden; box-shadow: var(--shadow-sm); }
@@ -227,7 +234,7 @@
                     </div>
                     <div class="panel">
                         <h3>Employees by Position</h3>
-                        <div class="chart-wrap"><canvas id="posPieChart"></canvas></div>
+                        <div class="pos-list" id="empPosList"></div>
                     </div>
                 </div>
                 
@@ -615,7 +622,8 @@ document.getElementById("loginForm").onsubmit = async (e) => {
 
 /* Dashboard & Charts */
 let charts = {};
-const COLORS = ["#6D28D9", "#4F46E5", "#8B5CF6", "#F59E0B", "#10B981", "#F43F5E", "#06B6D4"];
+// Distinct, varied colors for pie charts
+const COLORS = ["#6D28D9", "#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#EC4899", "#14B8A6", "#F97316", "#8B5CF6"];
 
 function setupChartDefaults() {
     if (typeof Chart !== 'undefined') {
@@ -630,8 +638,15 @@ function renderHiringChart(trend) {
     const ctx = document.getElementById("hiringChart").getContext('2d');
     if (charts.hiring) charts.hiring.destroy();
     charts.hiring = new Chart(ctx, {
-        type: 'line',
-        data: { labels: trend.map(t => t.label), datasets: [{ data: trend.map(t => t.value), borderColor: "#6D28D9", tension: 0.4, fill: true, backgroundColor: "rgba(109,40,217,0.05)" }] },
+        type: 'bar', // Changed to Bar Graph
+        data: { 
+            labels: trend.map(t => t.label), 
+            datasets: [{ 
+                data: trend.map(t => t.value), 
+                backgroundColor: "#6D28D9", 
+                borderRadius: 4
+            }] 
+        },
         options: { responsive: true, maintainAspectRatio: false }
     });
 }
@@ -647,21 +662,10 @@ function renderDeptPie(dist) {
     });
 }
 
-function renderPosPie(dist) {
-    if (typeof Chart === 'undefined') return;
-    const ctx = document.getElementById("posPieChart").getContext('2d');
-    if (charts.pos) charts.pos.destroy();
-    charts.pos = new Chart(ctx, {
-        type: 'doughnut',
-        data: { labels: dist.map(d => d.label), datasets: [{ data: dist.map(d => d.value), backgroundColor: COLORS }] },
-        options: { responsive: true, maintainAspectRatio: false, cutout: '70%' }
-    });
-}
-
 function renderStatusPie(dist) {
     if (typeof Chart === 'undefined') return;
     const ctx = document.getElementById("statusPieChart").getContext('2d');
-    const colorMap = { active: "#10B981", inactive: "#F59E0B", terminated: "#F43F5E", on_leave: "#3E7BFA" };
+    const colorMap = { active: "#10B981", inactive: "#F59E0B", terminated: "#EF4444", on_leave: "#3B82F6" };
     if (charts.status) charts.status.destroy();
     charts.status = new Chart(ctx, {
         type: 'doughnut',
@@ -678,10 +682,24 @@ function renderAttendanceChart(trend) {
         type: 'line',
         data: { labels: trend.map(t => formatDate(t.label)), datasets: [
             { label: 'Present', data: trend.map(t => t.present), borderColor: "#10B981", tension: 0.4 },
-            { label: 'Absent', data: trend.map(t => t.absent), borderColor: "#F43F5E", tension: 0.4 }
+            { label: 'Absent', data: trend.map(t => t.absent), borderColor: "#EF4444", tension: 0.4 }
         ]},
         options: { responsive: true, maintainAspectRatio: false }
     });
+}
+
+function renderEmpPosList(list) {
+    const el = document.getElementById("empPosList");
+    if (!list || list.length === 0) {
+        el.innerHTML = `<div style="text-align: center; color: var(--text-faint); padding: 20px;">No data</div>`;
+        return;
+    }
+    el.innerHTML = list.map(e => `
+        <div class="pos-list-item">
+            <div class="pos-name">${e.name}</div>
+            <div class="pos-title">${e.position}</div>
+        </div>
+    `).join("");
 }
 
 async function loadDashboard() {
@@ -689,7 +707,6 @@ async function loadDashboard() {
     try {
         const data = await Api.get("/api/dashboard/stats");
         const grid = document.getElementById("statGrid");
-        // Restored 5 Colorful Cards
         const cards = [
             { l: "Total Employees", v: data.cards.total_employees, i: "users", c: "c-blue" },
             { l: "Present Today", v: data.cards.present_today, i: "calendar-check", c: "c-green" },
@@ -708,9 +725,9 @@ async function loadDashboard() {
         lucide.createIcons();
         renderHiringChart(data.hiring_trend || []);
         renderDeptPie(data.department_distribution || []);
-        renderPosPie(data.position_distribution || []);
         renderStatusPie(data.status_distribution || []);
         renderAttendanceChart(data.attendance_trend || []);
+        renderEmpPosList(data.employees_by_position || []);
     } catch (e) {
         showToast(e.message, "error");
     }
@@ -733,7 +750,7 @@ async function populateEmpDropdown() {
     document.getElementById("attEmp").innerHTML = opts;
     document.getElementById("payrollEmp").innerHTML = opts;
     document.getElementById("leaveEmp").innerHTML = opts;
-    document.getElementById("assignEmpToPos").innerHTML = opts; // For Assign Position Modal
+    document.getElementById("assignEmpToPos").innerHTML = opts;
     
     const filterOpts = `<option value="">All Employees</option>${opts}`;
     document.getElementById("attFilterEmp").innerHTML = filterOpts;
@@ -855,7 +872,6 @@ async function loadPositions() {
     try {
         const data = await Api.get(url);
         body.innerHTML = data.length ? data.map(p => {
-            // Format Assigned Employees
             const empList = p.employees && p.employees.length > 0 
                 ? p.employees.map(e => `<span style="background:#F1F2F6; padding:3px 8px; border-radius:4px; font-size:11px; margin-right:4px;">${e.first_name} ${e.last_name}</span>`).join('') 
                 : '—';
@@ -1121,11 +1137,9 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("dbStatusPill").style.color = "#F43F5E";
     });
 
-    // Populate all dropdowns initially
     populateDeptDropdown();
     populateEmpDropdown();
 
-    // Form Submits
     document.getElementById("empForm").onsubmit = async (e) => {
         e.preventDefault();
         const id = document.getElementById("empId").value;
@@ -1185,13 +1199,11 @@ document.addEventListener("DOMContentLoaded", () => {
         } catch (err) { showToast(err.message, "error"); }
     };
 
-    // Assign Position Form
     document.getElementById("assignPosForm").onsubmit = async (e) => {
         e.preventDefault();
         const posId = document.getElementById("assignPosId").value;
         const empId = document.getElementById("assignEmpToPos").value;
         try {
-            // Partial update to employee to set their position_id
             await Api.put(`/api/employees/${empId}`, { position_id: parseInt(posId) });
             showToast("Employee assigned to position!");
             closeModal('assignPosModal');
