@@ -37,10 +37,10 @@ def ok(data=None, message="success", status=200):
     return jsonify({"success": True, "message": message, "data": data}), status
 
 def err(message, status=400):
+    # Ensure message is string so jsonify doesn't fail serializing Exception objects
     return jsonify({"success": False, "message": str(message), "data": None}), status
 
 def full_name_select():
-    # Correct PostgREST syntax for pointing to exact relation keys
     return (
         "*, department:departments(id,name), "
         "position:positions(id,title), "
