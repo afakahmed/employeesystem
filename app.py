@@ -73,8 +73,7 @@ def login():
     email = payload.get("email")
     password = payload.get("password")
     
-    # Mock authentication
-    if email == "admin@orbit.hr" and password == "password123":
+    if email == "admin@javagoat.hr" and password == "password123":
         return ok({"token": "mock-jwt-token-xyz", "user": {"name": "HR Admin", "role": "Administrator"}}, "Login successful")
     return err("Invalid email or password", 401)
 
@@ -132,6 +131,65 @@ def delete_department(dep_id):
     try:
         db().table("departments").delete().eq("id", dep_id).execute()
         return ok(None, "Department deleted")
+    except Exception as e:
+        return err(e, 400)
+
+# ===========================================================================
+# API: POSITIONS
+# ===========================================================================
+@app.route("/api/positions", methods=["GET"])
+def get_positions():
+    try:
+        query = db().table("positions").select("*, department:departments(id,name)").order("title")
+        search = request.args.get("search")
+        if search:
+            query = query.ilike("title", f"%{search}%")
+        res = query.execute()
+        return ok(res.data)
+    except Exception as e:
+        return err(e, 500)
+
+@app.route("/api/positions/<int:pos_id>", methods=["GET"])
+def get_position(pos_id):
+    try:
+        res = db().table("positions").select("*, department:departments(id,name)").eq("id", pos_id).single().execute()
+        return ok(res.data)
+    except Exception as e:
+        return err(e, 404)
+
+@app.route("/api/positions", methods=["POST"])
+def create_position():
+    payload = request.get_json(force=True)
+    try:
+        res = db().table("positions").insert({
+            "title": payload.get("title"),
+            "department_id": payload.get("department_id") or None,
+            "min_salary": payload.get("min_salary") or 0,
+            "max_salary": payload.get("max_salary") or 0,
+        }).execute()
+        return ok(res.data, "Position created", 201)
+    except Exception as e:
+        return err(e, 400)
+
+@app.route("/api/positions/<int:pos_id>", methods=["PUT"])
+def update_position(pos_id):
+    payload = request.get_json(force=True)
+    try:
+        res = db().table("positions").update({
+            "title": payload.get("title"),
+            "department_id": payload.get("department_id") or None,
+            "min_salary": payload.get("min_salary") or 0,
+            "max_salary": payload.get("max_salary") or 0,
+        }).eq("id", pos_id).execute()
+        return ok(res.data, "Position updated")
+    except Exception as e:
+        return err(e, 400)
+
+@app.route("/api/positions/<int:pos_id>", methods=["DELETE"])
+def delete_position(pos_id):
+    try:
+        db().table("positions").delete().eq("id", pos_id).execute()
+        return ok(None, "Position deleted")
     except Exception as e:
         return err(e, 400)
 
@@ -279,6 +337,69 @@ def delete_attendance(att_id):
     try:
         db().table("attendance").delete().eq("id", att_id).execute()
         return ok(None, "Attendance record deleted")
+    except Exception as e:
+        return err(e, 400)
+
+# ===========================================================================
+# API: LEAVES
+# ===========================================================================
+@app.route("/api/leaves", methods=["GET"])
+def get_leaves():
+    try:
+        query = db().table("leaves").select(
+            "*, employee:employees!employee_id(id,first_name,last_name,employee_code), "
+            "approver:employees!approved_by(id,first_name,last_name)"
+        )
+        status = request.args.get("status")
+        emp_id = request.args.get("employee_id")
+        if status: query = query.eq("status", status)
+        if emp_id: query = query.eq("employee_id", emp_id)
+        res = query.order("id", desc=True).execute()
+        return ok(res.data)
+    except Exception as e:
+        return err(e, 500)
+
+@app.route("/api/leaves", methods=["POST"])
+def create_leave():
+    payload = request.get_json(force=True)
+    try:
+        row = {
+            "employee_id": payload.get("employee_id"),
+            "leave_type": payload.get("leave_type"),
+            "start_date": payload.get("start_date"),
+            "end_date": payload.get("end_date"),
+            "reason": payload.get("reason"),
+            "status": payload.get("status") or "pending",
+            "approved_by": payload.get("approved_by") or None,
+        }
+        res = db().table("leaves").insert(row).execute()
+        return ok(res.data, "Leave request created", 201)
+    except Exception as e:
+        return err(e, 400)
+
+@app.route("/api/leaves/<int:leave_id>", methods=["PUT"])
+def update_leave(leave_id):
+    payload = request.get_json(force=True)
+    try:
+        row = {
+            "employee_id": payload.get("employee_id"),
+            "leave_type": payload.get("leave_type"),
+            "start_date": payload.get("start_date"),
+            "end_date": payload.get("end_date"),
+            "reason": payload.get("reason"),
+            "status": payload.get("status") or "pending",
+            "approved_by": payload.get("approved_by") or None,
+        }
+        res = db().table("leaves").update(row).eq("id", leave_id).execute()
+        return ok(res.data, "Leave request updated")
+    except Exception as e:
+        return err(e, 400)
+
+@app.route("/api/leaves/<int:leave_id>", methods=["DELETE"])
+def delete_leave(leave_id):
+    try:
+        db().table("leaves").delete().eq("id", leave_id).execute()
+        return ok(None, "Leave request deleted")
     except Exception as e:
         return err(e, 400)
 
