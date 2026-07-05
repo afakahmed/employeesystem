@@ -233,7 +233,8 @@ def create_employee():
             "manager_id": payload.get("manager_id") or None,
             "hire_date": payload.get("hire_date") or str(date.today()),
             "salary": payload.get("salary") or 0,
-            "status": payload.get("status") or "active"
+            "status": payload.get("status") or "active",
+            "profile_pic": payload.get("profile_pic") or None # Added profile_pic
         }
         res = db().table("employees").insert(row).execute()
         return ok(res.data, "Employee created", 201)
@@ -243,7 +244,7 @@ def create_employee():
 @app.route("/api/employees/<int:emp_id>", methods=["PUT"])
 def update_employee(emp_id):
     payload = request.get_json(force=True)
-    allowed = ["employee_code", "first_name", "last_name", "email", "phone", "gender", "date_of_birth", "address", "department_id", "position_id", "manager_id", "hire_date", "salary", "status"]
+    allowed = ["employee_code", "first_name", "last_name", "email", "phone", "gender", "date_of_birth", "address", "department_id", "position_id", "manager_id", "hire_date", "salary", "status", "profile_pic"]
     row = {k: payload[k] for k in allowed if k in payload}
     try:
         res = db().table("employees").update(row).eq("id", emp_id).execute()
@@ -445,7 +446,7 @@ def delete_payroll(pay_id):
 def dashboard_stats():
     try:
         client = db()
-        employees = client.table("employees").select("id,status,department_id,position_id,salary,hire_date,first_name,last_name,position:positions(id,title)").execute().data
+        employees = client.table("employees").select("id,status,department_id,position_id,salary,hire_date,first_name,last_name,profile_pic,position:positions(id,title)").execute().data
         departments = client.table("departments").select("id,name").execute().data
         positions = client.table("positions").select("id,title").execute().data
         leaves = client.table("leaves").select("id,status").execute().data
@@ -473,7 +474,8 @@ def dashboard_stats():
             pos_title = e.get("position", {}).get("title") if e.get("position") else "Unassigned"
             employees_by_position.append({
                 "name": f"{e['first_name']} {e['last_name']}",
-                "position": pos_title
+                "position": pos_title,
+                "profile_pic": e.get("profile_pic")
             })
 
         department_distribution = [{"label": k, "value": v} for k, v in sorted(dep_counts.items(), key=lambda x: -x[1])]
@@ -519,7 +521,7 @@ def dashboard_stats():
             "department_distribution": department_distribution,
             "status_distribution": status_distribution,
             "position_distribution": position_distribution,
-            "employees_by_position": employees_by_position, # For the detailed list
+            "employees_by_position": employees_by_position,
             "hiring_trend": hiring_trend,
             "attendance_trend": attendance_trend,
         })
