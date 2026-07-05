@@ -77,7 +77,7 @@
         .input, .select { padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-family: var(--font-body); font-size: 13.5px; background: var(--surface-alt); min-width: 150px; }
         .input:focus, .select:focus { outline: none; border-color: var(--primary); background: #fff; }
 
-        /* Dashboard Cards */
+        /* Dashboard Cards - Slight Gradients */
         .stat-grid-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 18px; margin-bottom: 22px; }
         .stat-card { border: none; color: #fff; position: relative; overflow: hidden; transition: 0.2s; box-shadow: var(--shadow-md); padding: 24px; border-radius: var(--radius-lg); }
         .stat-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
@@ -85,11 +85,11 @@
         .stat-card .stat-value, .stat-card .stat-label { color: #fff; position: relative; z-index: 2; }
         .stat-card .icon-badge { background: rgba(255,255,255,0.2); color: #fff; position: relative; z-index: 2; }
         
-        .stat-card.c-blue { background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%); }
-        .stat-card.c-green { background: linear-gradient(135deg, #10B981 0%, #059669 100%); }
-        .stat-card.c-orange { background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%); }
-        .stat-card.c-pink { background: linear-gradient(135deg, #F43F5E 0%, #E11D48 100%); }
-        .stat-card.c-cyan { background: linear-gradient(135deg, #06B6D4 0%, #0891B2 100%); }
+        .stat-card.c-blue { background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%); }
+        .stat-card.c-green { background: linear-gradient(135deg, #34D399 0%, #10B981 100%); }
+        .stat-card.c-orange { background: linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%); }
+        .stat-card.c-pink { background: linear-gradient(135deg, #FB7185 0%, #F43F5E 100%); }
+        .stat-card.c-cyan { background: linear-gradient(135deg, #22D3EE 0%, #06B6D4 100%); }
 
         .icon-badge { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 14px; }
         .stat-value { font-size: 28px; font-weight: 800; font-family: var(--font-display); letter-spacing: -1px; }
@@ -101,12 +101,26 @@
         .panel { background: var(--surface); border-radius: var(--radius-lg); padding: 22px; border: 1px solid var(--border); box-shadow: var(--shadow-sm); }
         .chart-wrap { height: 240px; position: relative; margin-top: 10px; }
         
+        /* Avatars */
+        .avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border); background: #fff; }
+        .avatar-sm { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 1px solid var(--border); background: #fff; }
+        .avatar-lg { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid var(--border); background: #fff; }
+
         /* Position List */
         .pos-list { max-height: 240px; overflow-y: auto; margin-top: 10px; }
         .pos-list-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); }
         .pos-list-item:last-child { border-bottom: none; }
-        .pos-name { font-weight: 600; font-size: 14px; }
-        .pos-title { color: var(--text-dim); font-size: 12px; background: var(--surface-alt); padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border); }
+        .pos-name { font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 10px; }
+        .pos-title { 
+            color: var(--primary); 
+            font-weight: 600; 
+            font-size: 11px; 
+            background: var(--primary-light); 
+            padding: 5px 10px; 
+            border-radius: 6px; 
+            border: 1px solid #EDEDFC;
+            text-transform: capitalize;
+        }
         
         /* Tables */
         .data-card { background: var(--surface); border-radius: var(--radius-lg); border: 1px solid var(--border); overflow: hidden; box-shadow: var(--shadow-sm); }
@@ -266,7 +280,7 @@
                 <div class="data-card">
                     <table class="data-table">
                         <thead>
-                            <tr><th>Name</th><th>Code</th><th>Dept</th><th>Status</th><th>Salary</th><th>Actions</th></tr>
+                            <tr><th>Employee</th><th>Code</th><th>Dept</th><th>Status</th><th>Salary</th><th>Actions</th></tr>
                         </thead>
                         <tbody id="employeeTableBody"></tbody>
                     </table>
@@ -367,6 +381,11 @@
         <h3 id="empModalTitle">Add Employee</h3>
         <form id="empForm" style="margin-top: 20px;">
             <input type="hidden" id="empId">
+            <div class="form-group" style="align-items: center;">
+                <label>Profile Picture</label>
+                <img id="empProfilePreview" src="https://api.dicebear.com/7.x/initials/svg?backgroundColor=6D28D9&text=New" class="avatar-lg">
+                <input type="file" id="empProfileInput" accept="image/*" style="font-size: 12px; margin-top: 10px; max-width: 200px;">
+            </div>
             <div class="form-grid">
                 <div class="form-group"><label>First Name</label><input type="text" id="empFirst" required></div>
                 <div class="form-group"><label>Last Name</label><input type="text" id="empLast" required></div>
@@ -558,6 +577,8 @@
 <div id="toastRoot" class="toast-root"></div>
 
 <script>
+const DEFAULT_AVATAR = "https://api.dicebear.com/7.x/initials/svg?backgroundColor=6D28D9";
+
 const Api = {
     async request(method, url, body) {
         const opts = { method, headers: { "Content-Type": "application/json" } };
@@ -588,6 +609,35 @@ function formatDate(d) { return d ? new Date(d).toLocaleDateString() : '—'; }
 function escapeHtml(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;"); }
 function closeModal(id) { document.getElementById(id).classList.remove('show'); }
 function openModal(id) { document.getElementById(id).classList.add('show'); lucide.createIcons(); }
+
+// Read file as resized Base64 to keep DB lightweight
+function previewProfile(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            let { width, height } = img;
+            const max = 200; // max 200x200px
+            if (width > height) {
+                if (width > max) { height *= max / width; width = max; }
+            } else {
+                if (height > max) { width *= max / height; height = max; }
+            }
+            canvas.width = width;
+            canvas.height = height;
+            ctx.drawImage(img, 0, 0, width, height);
+            document.getElementById("empProfilePreview").src = canvas.toDataURL('image/jpeg', 0.8);
+        };
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+}
+
+document.getElementById("empProfileInput").addEventListener("change", previewProfile);
 
 /* Auth Logic */
 function checkAuth() {
@@ -622,7 +672,6 @@ document.getElementById("loginForm").onsubmit = async (e) => {
 
 /* Dashboard & Charts */
 let charts = {};
-// Distinct, varied colors for pie charts
 const COLORS = ["#6D28D9", "#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#EC4899", "#14B8A6", "#F97316", "#8B5CF6"];
 
 function setupChartDefaults() {
@@ -638,7 +687,7 @@ function renderHiringChart(trend) {
     const ctx = document.getElementById("hiringChart").getContext('2d');
     if (charts.hiring) charts.hiring.destroy();
     charts.hiring = new Chart(ctx, {
-        type: 'bar', // Changed to Bar Graph
+        type: 'bar',
         data: { 
             labels: trend.map(t => t.label), 
             datasets: [{ 
@@ -696,7 +745,10 @@ function renderEmpPosList(list) {
     }
     el.innerHTML = list.map(e => `
         <div class="pos-list-item">
-            <div class="pos-name">${e.name}</div>
+            <div class="pos-name">
+                <img src="${e.profile_pic || DEFAULT_AVATAR}" class="avatar-sm">
+                ${e.name}
+            </div>
             <div class="pos-title">${e.position}</div>
         </div>
     `).join("");
@@ -775,7 +827,10 @@ async function loadEmployees() {
         const data = await Api.get(url);
         body.innerHTML = data.length ? data.map(e => `
             <tr>
-                <td><strong>${e.first_name} ${e.last_name}</strong></td>
+                <td style="display:flex; align-items:center; gap:10px;">
+                    <img src="${e.profile_pic || DEFAULT_AVATAR}" class="avatar">
+                    <strong>${e.first_name} ${e.last_name}</strong>
+                </td>
                 <td><code>${e.employee_code}</code></td>
                 <td>${e.department ? e.department.name : '—'}</td>
                 <td><span class="pill pill-${e.status}">${e.status}</span></td>
@@ -794,6 +849,8 @@ async function openEmpModal(id = null) {
     document.getElementById("empForm").reset();
     document.getElementById("empId").value = "";
     document.getElementById("empModalTitle").textContent = "Add Employee";
+    document.getElementById("empProfilePreview").src = DEFAULT_AVATAR;
+    
     if (id) {
         document.getElementById("empModalTitle").textContent = "Edit Employee";
         const emp = await Api.get(`/api/employees/${id}`);
@@ -805,6 +862,9 @@ async function openEmpModal(id = null) {
         document.getElementById("empSalary").value = emp.salary;
         document.getElementById("empDept").value = emp.department_id || "";
         document.getElementById("empStatus").value = emp.status;
+        if (emp.profile_pic) {
+            document.getElementById("empProfilePreview").src = emp.profile_pic;
+        }
     }
     openModal('employeeModal');
 }
@@ -1143,6 +1203,8 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("empForm").onsubmit = async (e) => {
         e.preventDefault();
         const id = document.getElementById("empId").value;
+        const profilePicSrc = document.getElementById("empProfilePreview").src;
+        
         const payload = {
             employee_code: document.getElementById("empCode").value,
             first_name: document.getElementById("empFirst").value,
@@ -1151,7 +1213,9 @@ document.addEventListener("DOMContentLoaded", () => {
             salary: parseFloat(document.getElementById("empSalary").value),
             department_id: document.getElementById("empDept").value || null,
             status: document.getElementById("empStatus").value,
-            hire_date: new Date().toISOString().split('T')[0]
+            hire_date: new Date().toISOString().split('T')[0],
+            // Only save if it's not the default avatar
+            profile_pic: profilePicSrc === DEFAULT_AVATAR ? null : profilePicSrc 
         };
         try {
             if (id) await Api.put(`/api/employees/${id}`, payload);
