@@ -18,12 +18,18 @@ from supabase import create_client, Client
 
 load_dotenv()
 
-SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
-SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_KEY", "") or os.environ.get("SUPABASE_KEY", "")
+# We use .strip("\"'") to prevent errors if quotes are accidentally added in Render env vars
+SUPABASE_URL = os.environ.get("SUPABASE_URL", "").strip("\"'")
+SUPABASE_KEY = (os.environ.get("SUPABASE_SERVICE_KEY", "") or os.environ.get("SUPABASE_KEY", "")).strip("\"'")
 
 supabase: Client | None = None
+
 if SUPABASE_URL and SUPABASE_KEY:
-    supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+    try:
+        supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+    except Exception as e:
+        print(f"WARNING - Supabase initialization error: {e}")
+        supabase = None
 
 app = Flask(__name__)
 app.config["JSON_SORT_KEYS"] = False
@@ -36,8 +42,8 @@ def db():
     """Return the Supabase client, or raise a clean error if not configured."""
     if supabase is None:
         raise RuntimeError(
-            "Supabase is not configured. Set SUPABASE_URL and SUPABASE_SERVICE_KEY "
-            "environment variables (see .env.example)."
+            "Supabase is not configured or the API key is invalid. Set SUPABASE_URL and SUPABASE_KEY "
+            "environment variables correctly in the Render Dashboard."
         )
     return supabase
 
